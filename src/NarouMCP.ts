@@ -89,6 +89,8 @@ const RankingInputSchema = z.object({
   date: z.string().optional().describe("集計日(YYYY-MM-DD形式)"),
   rankingType: RankingTypeSchema,
   fields: FieldsSchema.optional().describe("取得するフィールド"),
+  limit: z.number().min(1).max(300).optional().describe("取得件数（1-300）"),
+  offset: z.number().min(0).max(299).optional().describe("取得開始位置"),
 });
 
 // R18検索の入力スキーマ
@@ -292,7 +294,7 @@ export class NarouMCP extends McpAgent {
         description: "小説家になろうのランキングを取得します。",
         inputSchema: RankingInputSchema.shape,
       },
-      async ({ date, rankingType, fields }) => {
+      async ({ date, rankingType, fields, limit, offset }) => {
         const builder = ranking(narouFetch);
 
         if (date) builder.date(new Date(date));
@@ -314,9 +316,9 @@ export class NarouMCP extends McpAgent {
           content: [
             {
               type: "text",
-              text: `ランキング結果: ${result.length}件`,
+              text: date ? `集計日: ${date}` : "最新ランキング",
             },
-            ...result.map(
+            ...result.slice(offset ?? 0, (offset ?? 0) + (limit ?? 300)).map(
               (item) =>
                 ({
                   type: "text",
