@@ -7,7 +7,7 @@ declare module "cloudflare:test" {
   interface ProvidedEnv extends Env {}
 }
 
-describe("Chat worker", () => {
+describe("Narou MCP worker", () => {
   it("should respond to /sse endpoint", async () => {
     const request = new Request("http://localhost/sse");
     const response = await worker.fetch(
