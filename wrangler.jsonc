@@ -11,9 +11,6 @@
 		"nodejs_compat",
 		"nodejs_compat_populate_process_env"
 	],
-	"assets": {
-		"directory": "public"
-	},
 	"durable_objects": {
 		"bindings": [
 			{
