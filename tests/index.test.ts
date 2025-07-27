@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 // Could import any other source file/function here
-import worker from "../src/index.js";
+import worker from "../src/index";
 
 declare module "cloudflare:test" {
   // Controls the type of `import("cloudflare:test").env`
