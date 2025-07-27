@@ -1,0 +1,49 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm run:*)",
+      "Bash(pnpm install)",
+      "Bash(pnpm add:*)",
+      "Bash(rg:*)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__get-library-docs",
+      "Bash(pnpm --filter:*:run:*)",
+      "mcp__typescript-lsp__get_hover"
+    ],
+    "deny": [
+      "bash(cd:*)",
+      "Bash(npm:*)",
+      "Bash(yarn:*)",
+      "Bash(npx:*)",
+      "Bash(pnpx:*)",
+      "Bash(pmpm:*)",
+      "Bash(pnmp:*)",
+      "Bash(pnpm test:*)",
+      "Bash(pnpm test:components:*)",
+      "Bash(pnpm test:workers:*)",
+      "Bash(pnpm test:node:*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pnpm run lint:fix"
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pnpm run format"
+          }
+        ]
+      }
+    ]
+  }
+}
