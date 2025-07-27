@@ -1,5 +1,5 @@
 {
-  "name": "cloudflare-agent-starter",
+  "name": "mcp-narou",
   "version": "1.0.0",
   "description": "",
   "type": "module",
@@ -17,11 +17,6 @@
     "format": "biome format --write",
     "checks": "pnpm cf-typegen && pnpm check-types && pnpm lint && pnpm test"
   },
-  "keywords": [
-    "cloudflare",
-    "ai",
-    "agents"
-  ],
   "author": "",
   "license": "MIT",
   "devDependencies": {
