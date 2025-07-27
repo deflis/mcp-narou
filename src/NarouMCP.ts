@@ -7,6 +7,7 @@ import {
   Fields,
   Genre,
   GenreNotation,
+  NarouNovelFetch,
   NovelTypeParam,
   Order,
   R18Fields,
@@ -19,8 +20,18 @@ import {
   searchR18,
   searchUser,
   UserOrder,
-} from "narou";
+} from "narou/index";
 import { z } from "zod";
+
+const fetchWrapper: typeof fetch = (url) => {
+  return fetch(url, {
+    headers: {
+      "User-Agent": "MCP-Narou/1.0",
+    },
+  });
+};
+
+const narouFetch = new NarouNovelFetch(fetchWrapper);
 
 // 入力スキーマの定義
 const GenreSchema = z.nativeEnum(Genre).optional().describe("ジャンル");
@@ -121,12 +132,16 @@ export class NarouMCP extends McpAgent {
         title: "小説取得",
         description: "小説家になろうの小説を取得します。",
         inputSchema: z.object({
-          ncode: z.string().describe("小説のNコード"),
+          ncode: z
+            .string()
+            .describe("小説のNコード")
+            .min(1)
+            .regex(/^[nN][0-9]{4}[a-zA-Z]{1,2}$/),
           fields: FieldsSchema,
         }).shape,
       },
       async ({ ncode, fields }) => {
-        const builder = search().ncode(ncode);
+        const builder = search(undefined, narouFetch).ncode(ncode);
         builder.fields(
           fields ?? [
             Fields.ncode,
@@ -198,7 +213,7 @@ export class NarouMCP extends McpAgent {
           buntai,
         } = input;
 
-        const builder = search();
+        const builder = search(undefined, narouFetch);
 
         if (word) builder.word(word);
         if (genre) builder.genre(genre);
@@ -278,7 +293,7 @@ export class NarouMCP extends McpAgent {
         inputSchema: RankingInputSchema.shape,
       },
       async ({ date, rankingType, fields }) => {
-        const builder = ranking();
+        const builder = ranking(narouFetch);
 
         if (date) builder.date(new Date(date));
         if (rankingType) builder.type(rankingType);
@@ -339,7 +354,7 @@ export class NarouMCP extends McpAgent {
       async (input) => {
         const { word, fields, r18Site, order, novelType, limit, start } = input;
 
-        const builder = searchR18();
+        const builder = searchR18(undefined, narouFetch);
 
         if (word) builder.word(word);
         if (r18Site) builder.r18Site(r18Site);
@@ -413,7 +428,7 @@ export class NarouMCP extends McpAgent {
           maxReview,
         } = input;
 
-        const builder = searchUser();
+        const builder = searchUser(undefined, narouFetch);
 
         if (word) builder.word(word);
         if (order) builder.order(order);
@@ -454,7 +469,7 @@ export class NarouMCP extends McpAgent {
       async (input) => {
         const { ncode } = input;
 
-        const result = await rankingHistory(ncode);
+        const result = await rankingHistory(ncode, narouFetch);
         return {
           content: [
             {
