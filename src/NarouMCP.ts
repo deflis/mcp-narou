@@ -89,7 +89,12 @@ const RankingInputSchema = z.object({
   date: z.string().optional().describe("集計日(YYYY-MM-DD形式)"),
   rankingType: RankingTypeSchema,
   fields: FieldsSchema.optional().describe("取得するフィールド"),
-  limit: z.number().min(1).max(300).optional().describe("取得件数（1-300）"),
+  limit: z
+    .number()
+    .min(1)
+    .max(300)
+    .optional()
+    .describe("取得件数（デフォルト・最大300）"),
   offset: z.number().min(0).max(299).optional().describe("取得開始位置"),
 });
 
