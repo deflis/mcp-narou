@@ -113,5 +113,4 @@ Before committing, always:
 
 @docs/commit.md
 @docs/testing.md
-
-Narou Library LLM texts: [docs/narou.md](docs/narou.md)
+@docs/narou.md
