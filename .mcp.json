@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "typescript-lsp": {
+      "command": "npx",
+      "args": [
+        "@mizchi/lsmcp",
+        "--preset=typescript"
+      ]
+    }
+  }
+}
