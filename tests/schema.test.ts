@@ -23,6 +23,10 @@ import {
   R18FieldsSchema,
   R18SiteSchema,
   RankingTypeSchema,
+  SearchNovelInputSchema,
+  SearchUserInputSchema,
+  UserFieldsMapping,
+  UserFieldsSchema,
   UserOrderSchema,
 } from "../src/schemas.js";
 
@@ -292,6 +296,242 @@ describe("Human-readable enum schemas", () => {
 
     it("should reject invalid user order names", () => {
       expect(() => UserOrderSchema.parse("無効なユーザー検索並び順")).toThrow();
+    });
+  });
+
+  describe("UserFieldsSchema", () => {
+    it("should accept human-readable user field names", () => {
+      const input = ["ユーザー名", "小説投稿数", "レビュー投稿数"];
+      const result = UserFieldsSchema.parse(input);
+
+      expect(result).toEqual(["n", "nc", "rc"]);
+    });
+
+    it("should accept undefined and return undefined", () => {
+      const result = UserFieldsSchema.parse(undefined);
+      expect(result).toBeUndefined();
+    });
+
+    it("should transform all valid user field names", () => {
+      const allFieldNames = Object.keys(
+        UserFieldsMapping,
+      ) as (keyof typeof UserFieldsMapping)[];
+      const result = UserFieldsSchema.parse(allFieldNames);
+
+      expect(result).toHaveLength(allFieldNames.length);
+      expect(result).toContain("u"); // ユーザーID
+      expect(result).toContain("n"); // ユーザー名
+      expect(result).toContain("sg"); // 総合評価ポイントの合計
+    });
+
+    it("should reject invalid user field names", () => {
+      expect(() => UserFieldsSchema.parse(["無効なフィールド"])).toThrow();
+    });
+  });
+});
+
+describe("Input schemas validation", () => {
+  describe("SearchNovelInputSchema", () => {
+    it("should accept all basic search parameters", () => {
+      const input = {
+        word: "テスト",
+        notword: "除外",
+        ncode: ["n1234ab"],
+        userId: [123, 456],
+      };
+      const result = SearchNovelInputSchema.parse(input);
+
+      expect(result.word).toBe("テスト");
+      expect(result.notword).toBe("除外");
+      expect(result.ncode).toEqual(["n1234ab"]);
+      expect(result.userId).toEqual([123, 456]);
+    });
+
+    it("should accept genre parameters", () => {
+      const input = {
+        genre: "異世界〔恋愛〕",
+        notGenre: "現実世界〔恋愛〕",
+        bigGenre: "恋愛",
+        notBigGenre: "ファンタジー",
+      };
+      const result = SearchNovelInputSchema.parse(input);
+
+      expect(result.genre).toBe(Genre.RenaiIsekai);
+      expect(result.notGenre).toBe(Genre.RenaiGenjitsusekai);
+      expect(result.bigGenre).toBe(BigGenre.Renai);
+      expect(result.notBigGenre).toBe(BigGenre.Fantasy);
+    });
+
+    it("should accept range parameters", () => {
+      const input = {
+        minLength: 1000,
+        maxLength: 50000,
+        minTime: 10,
+        maxTime: 120,
+        minKaiwaritu: 20,
+        maxKaiwaritu: 80,
+        minSasie: 1,
+        maxSasie: 10,
+      };
+      const result = SearchNovelInputSchema.parse(input);
+
+      expect(result.minLength).toBe(1000);
+      expect(result.maxLength).toBe(50000);
+      expect(result.minTime).toBe(10);
+      expect(result.maxTime).toBe(120);
+      expect(result.minKaiwaritu).toBe(20);
+      expect(result.maxKaiwaritu).toBe(80);
+      expect(result.minSasie).toBe(1);
+      expect(result.maxSasie).toBe(10);
+    });
+
+    it("should accept date range parameters", () => {
+      const input = {
+        lastUpdateFrom: "2024-01-01 00:00:00",
+        lastUpdateTo: "2024-12-31 23:59:59",
+        lastNovelUpdateFrom: "2024-01-01 00:00:00",
+        lastNovelUpdateTo: "2024-12-31 23:59:59",
+      };
+      const result = SearchNovelInputSchema.parse(input);
+
+      expect(result.lastUpdateFrom).toBe("2024-01-01 00:00:00");
+      expect(result.lastUpdateTo).toBe("2024-12-31 23:59:59");
+      expect(result.lastNovelUpdateFrom).toBe("2024-01-01 00:00:00");
+      expect(result.lastNovelUpdateTo).toBe("2024-12-31 23:59:59");
+    });
+
+    it("should accept special filters", () => {
+      const input = {
+        isR15: true,
+        isBL: false,
+        isGL: true,
+        isZankoku: false,
+        isTensei: true,
+        isTenni: false,
+        isStop: true,
+        isPickup: true,
+        isTT: true,
+      };
+      const result = SearchNovelInputSchema.parse(input);
+
+      expect(result.isR15).toBe(true);
+      expect(result.isBL).toBe(false);
+      expect(result.isGL).toBe(true);
+      expect(result.isZankoku).toBe(false);
+      expect(result.isTensei).toBe(true);
+      expect(result.isTenni).toBe(false);
+      expect(result.isStop).toBe(true);
+      expect(result.isPickup).toBe(true);
+      expect(result.isTT).toBe(true);
+    });
+
+    it("should accept search target parameters with defaults", () => {
+      const input = {
+        byTitle: false,
+        byOutline: true,
+        byKeyword: false,
+        byAuthor: true,
+      };
+      const result = SearchNovelInputSchema.parse(input);
+
+      expect(result.byTitle).toBe(false);
+      expect(result.byOutline).toBe(true);
+      expect(result.byKeyword).toBe(false);
+      expect(result.byAuthor).toBe(true);
+    });
+
+    it("should provide default values for search target parameters", () => {
+      const input = {};
+      const result = SearchNovelInputSchema.parse(input);
+
+      expect(result.byTitle).toBe(true);
+      expect(result.byOutline).toBe(true);
+      expect(result.byKeyword).toBe(true);
+      expect(result.byAuthor).toBe(true);
+    });
+
+    it("should accept output control parameters", () => {
+      const input = {
+        fields: ["小説名", "作者名", "文字数"],
+        order: "ブックマーク数の多い順",
+        limit: 100,
+        start: 20,
+      };
+      const result = SearchNovelInputSchema.parse(input);
+
+      expect(result.fields).toEqual([
+        Fields.title,
+        Fields.writer,
+        Fields.length,
+      ]);
+      expect(result.order).toBe(Order.FavoriteNovelCount);
+      expect(result.limit).toBe(100);
+      expect(result.start).toBe(20);
+    });
+
+    it("should reject invalid limit values", () => {
+      expect(() => SearchNovelInputSchema.parse({ limit: 0 })).toThrow();
+      expect(() => SearchNovelInputSchema.parse({ limit: 501 })).toThrow();
+    });
+
+    it("should reject invalid start values", () => {
+      expect(() => SearchNovelInputSchema.parse({ start: 0 })).toThrow();
+    });
+  });
+
+  describe("SearchUserInputSchema", () => {
+    it("should accept all basic user search parameters", () => {
+      const input = {
+        word: "テスト",
+        notword: "除外",
+        userId: 123,
+        name1st: "あ",
+      };
+      const result = SearchUserInputSchema.parse(input);
+
+      expect(result.word).toBe("テスト");
+      expect(result.notword).toBe("除外");
+      expect(result.userId).toBe(123);
+      expect(result.name1st).toBe("あ");
+    });
+
+    it("should accept filter parameters", () => {
+      const input = {
+        minNovel: 1,
+        maxNovel: 100,
+        minReview: 0,
+        maxReview: 50,
+      };
+      const result = SearchUserInputSchema.parse(input);
+
+      expect(result.minNovel).toBe(1);
+      expect(result.maxNovel).toBe(100);
+      expect(result.minReview).toBe(0);
+      expect(result.maxReview).toBe(50);
+    });
+
+    it("should accept output control parameters", () => {
+      const input = {
+        fields: ["ユーザー名", "小説投稿数", "レビュー投稿数"],
+        order: "小説投稿数の多い順",
+        limit: 50,
+        start: 10,
+      };
+      const result = SearchUserInputSchema.parse(input);
+
+      expect(result.fields).toEqual(["n", "nc", "rc"]);
+      expect(result.order).toBe(UserOrder.NovelCount);
+      expect(result.limit).toBe(50);
+      expect(result.start).toBe(10);
+    });
+
+    it("should reject invalid limit values", () => {
+      expect(() => SearchUserInputSchema.parse({ limit: 0 })).toThrow();
+      expect(() => SearchUserInputSchema.parse({ limit: 501 })).toThrow();
+    });
+
+    it("should reject invalid start values", () => {
+      expect(() => SearchUserInputSchema.parse({ start: 0 })).toThrow();
     });
   });
 });
