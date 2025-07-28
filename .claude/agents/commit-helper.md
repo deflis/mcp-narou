@@ -22,8 +22,6 @@ Analyze uncommitted files and create commits with appropriate granularity for lo
      - `pnpm run lint` to check code style
      - `pnpm run check-types` to execute type checking
      - `pnpm run test` to run tests and verify results
-   - Use custom slash command `/orchestrator` for fixes
-   - After fixes, run all checks again and verify status with `git status`
 
 3. **Check Uncommitted Status** (parallel subtasks)
    - Execute the following tasks together:
