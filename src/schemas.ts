@@ -285,24 +285,94 @@ export const R18FieldsSchema = z
 
 // 小説検索の入力スキーマ
 export const SearchNovelInputSchema = z.object({
+  // 基本検索
   word: z.string().optional().describe("検索キーワード"),
-  fields: FieldsSchema,
+  notword: z.string().optional().describe("除外キーワード"),
+  ncode: z
+    .union([z.string(), z.array(z.string())])
+    .optional()
+    .describe("Nコード（単一または配列）"),
+  userId: z
+    .union([z.number(), z.array(z.number())])
+    .optional()
+    .describe("ユーザーID（単一または配列）"),
+
+  // ジャンル・カテゴリ
   genre: GenreSchema,
+  notGenre: GenreSchema.describe("除外ジャンル").optional(),
   bigGenre: BigGenreSchema,
-  order: OrderSchema,
+  notBigGenre: BigGenreSchema.describe("除外大ジャンル").optional(),
+
+  // 作品属性
   novelType: NovelTypeSchema,
-  limit: z.number().min(1).max(500).optional().describe("取得件数（1-500）"),
-  start: z.number().min(1).optional().describe("取得開始位置"),
-  ncode: z.string().optional().describe("Nコード"),
+  buntai: BuntaiSchema,
+
+  // 文字数・時間・統計値
+  minLength: z.number().optional().describe("最小文字数"),
+  maxLength: z.number().optional().describe("最大文字数"),
+  minTime: z.number().optional().describe("最小読了時間（分）"),
+  maxTime: z.number().optional().describe("最大読了時間（分）"),
+  minKaiwaritu: z.number().optional().describe("最小会話率（%）"),
+  maxKaiwaritu: z.number().optional().describe("最大会話率（%）"),
+  minSasie: z.number().optional().describe("最小挿絵数"),
+  maxSasie: z.number().optional().describe("最大挿絵数"),
+
+  // 日時指定
+  lastUpdateFrom: z
+    .string()
+    .optional()
+    .describe("最終更新日時開始（YYYY-MM-DD HH:MM:SS）"),
+  lastUpdateTo: z
+    .string()
+    .optional()
+    .describe("最終更新日時終了（YYYY-MM-DD HH:MM:SS）"),
+  lastNovelUpdateFrom: z
+    .string()
+    .optional()
+    .describe("小説更新日時開始（YYYY-MM-DD HH:MM:SS）"),
+  lastNovelUpdateTo: z
+    .string()
+    .optional()
+    .describe("小説更新日時終了（YYYY-MM-DD HH:MM:SS）"),
+
+  // 特殊フィルター
   isR15: z.boolean().optional().describe("R15作品を含む"),
   isBL: z.boolean().optional().describe("BL作品を含む"),
   isGL: z.boolean().optional().describe("GL作品を含む"),
   isZankoku: z.boolean().optional().describe("残酷な描写ありを含む"),
   isTensei: z.boolean().optional().describe("異世界転生を含む"),
   isTenni: z.boolean().optional().describe("異世界転移を含む"),
-  minLength: z.number().optional().describe("最小文字数"),
-  maxLength: z.number().optional().describe("最大文字数"),
-  buntai: BuntaiSchema,
+  isStop: z.boolean().optional().describe("長期連載停止中作品を含む"),
+  isPickup: z.boolean().optional().describe("ピックアップ作品のみ"),
+  isTT: z.boolean().optional().describe("異世界転生・転移作品のみ"),
+
+  // 検索対象指定
+  byTitle: z
+    .boolean()
+    .optional()
+    .describe("作品名を検索対象とする")
+    .default(true),
+  byOutline: z
+    .boolean()
+    .optional()
+    .describe("あらすじを検索対象とする")
+    .default(true),
+  byKeyword: z
+    .boolean()
+    .optional()
+    .describe("キーワードを検索対象とする")
+    .default(true),
+  byAuthor: z
+    .boolean()
+    .optional()
+    .describe("作者名を検索対象とする")
+    .default(true),
+
+  // 出力制御
+  fields: FieldsSchema,
+  order: OrderSchema,
+  limit: z.number().min(1).max(500).optional().describe("取得件数（1-500）"),
+  start: z.number().min(1).optional().describe("取得開始位置"),
 });
 
 // ランキング検索の入力スキーマ
@@ -330,16 +400,50 @@ export const SearchR18InputSchema = z.object({
   start: z.number().min(1).optional().describe("取得開始位置"),
 });
 
+// ユーザーフィールドマッピング
+export const UserFieldsMapping = {
+  ユーザーID: "u",
+  ユーザー名: "n",
+  ユーザー名のフリガナ: "y",
+  ユーザー名のフリガナの頭文字: "1",
+  小説投稿数: "nc",
+  レビュー投稿数: "rc",
+  小説累計文字数: "nl",
+  総合評価ポイントの合計: "sg",
+} as const;
+
+export const UserFieldsSchema = z
+  .array(
+    z.enum(
+      Object.keys(UserFieldsMapping) as [
+        keyof typeof UserFieldsMapping,
+        ...(keyof typeof UserFieldsMapping)[],
+      ],
+    ),
+  )
+  .optional()
+  .transform((val) => val?.map((key) => UserFieldsMapping[key]))
+  .describe("ユーザー検索用の取得フィールド");
+
 // ユーザー検索の入力スキーマ
 export const SearchUserInputSchema = z.object({
+  // 基本検索
   word: z.string().optional().describe("検索キーワード"),
-  order: UserOrderSchema,
-  limit: z.number().min(1).max(500).optional().describe("取得件数（1-500）"),
-  start: z.number().min(1).optional().describe("取得開始位置"),
+  notword: z.string().optional().describe("除外キーワード"),
+  userId: z.number().optional().describe("ユーザーID"),
+  name1st: z.string().optional().describe("ユーザー名フリガナの頭文字"),
+
+  // フィルター
   minNovel: z.number().optional().describe("最小小説投稿数"),
   maxNovel: z.number().optional().describe("最大小説投稿数"),
   minReview: z.number().optional().describe("最小レビュー投稿数"),
   maxReview: z.number().optional().describe("最大レビュー投稿数"),
+
+  // 出力制御
+  fields: UserFieldsSchema,
+  order: UserOrderSchema,
+  limit: z.number().min(1).max(500).optional().describe("取得件数（1-500）"),
+  start: z.number().min(1).optional().describe("取得開始位置"),
 });
 
 // ランキング履歴の入力スキーマ
