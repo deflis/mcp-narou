@@ -27,7 +27,6 @@ Analyze uncommitted files and create commits with appropriate granularity for lo
    - Execute the following tasks together:
    - List changed files with `git status`
    - Check change statistics with `git diff --stat`
-   - Analyze specific changes with `git diff`
 
 4. **Commit with Appropriate Granularity** (sequential subtasks)
    - Analyze specific changes with `git diff`
