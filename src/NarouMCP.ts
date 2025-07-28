@@ -1,17 +1,17 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { McpAgent } from "agents/mcp";
 import {
-  BigGenre,
+  type BigGenre,
   BigGenreNotation,
   BuntaiParam,
   Fields,
-  Genre,
+  type Genre,
   GenreNotation,
   NarouNovelFetch,
   NovelTypeParam,
   Order,
   R18Fields,
-  R18Site,
+  type R18Site,
   R18SiteNotation,
   RankingType,
   ranking,
@@ -33,24 +33,161 @@ const fetchWrapper: typeof fetch = (url) => {
 
 const narouFetch = new NarouNovelFetch(fetchWrapper);
 
+// Human-readable genre mappings using GenreNotation
+const GenreMapping = Object.fromEntries(
+  Object.entries(GenreNotation).map(([key, value]) => [value, Number(key)]),
+) as Record<string, Genre>;
+
+// Human-readable big genre mappings using BigGenreNotation
+const BigGenreMapping = Object.fromEntries(
+  Object.entries(BigGenreNotation).map(([key, value]) => [value, Number(key)]),
+) as Record<string, BigGenre>;
+
 // 入力スキーマの定義
-const GenreSchema = z.nativeEnum(Genre).optional().describe("ジャンル");
-const BigGenreSchema = z.nativeEnum(BigGenre).optional().describe("大ジャンル");
-const OrderSchema = z.nativeEnum(Order).optional().describe("並び順");
+const GenreSchema = z
+  .enum(
+    Object.keys(GenreMapping) as [
+      keyof typeof GenreMapping,
+      ...(keyof typeof GenreMapping)[],
+    ],
+  )
+  .optional()
+  .transform((val) => (val ? GenreMapping[val] : undefined))
+  .describe("ジャンル");
+
+const BigGenreSchema = z
+  .enum(
+    Object.keys(BigGenreMapping) as [
+      keyof typeof BigGenreMapping,
+      ...(keyof typeof BigGenreMapping)[],
+    ],
+  )
+  .optional()
+  .transform((val) => (val ? BigGenreMapping[val] : undefined))
+  .describe("大ジャンル");
+// Human-readable order mappings
+const OrderMapping = {
+  ブックマーク数の多い順: Order.FavoriteNovelCount,
+  レビュー数の多い順: Order.ReviewCount,
+  総合ポイントの高い順: Order.HyokaDesc,
+  総合ポイントの低い順: Order.HyokaAsc,
+  感想の多い順: Order.ImpressionCount,
+  評価者数の多い順: Order.HyokaCountDesc,
+  評価者数の少ない順: Order.HyokaCountAsc,
+  週間ユニークユーザの多い順: Order.Weekly,
+  小説本文の文字数が多い順: Order.LengthDesc,
+  小説本文の文字数が少ない順: Order.LengthAsc,
+  Nコードが新しい順: Order.NCodeDesc,
+  新着更新順: Order.New,
+  古い順: Order.Old,
+  日間ポイントの高い順: Order.DailyPoint,
+  週間ポイントの高い順: Order.WeeklyPoint,
+  月間ポイントの高い順: Order.MonthlyPoint,
+  四半期ポイントの高い順: Order.QuarterPoint,
+  年間ポイントの高い順: Order.YearlyPoint,
+  初回掲載順: Order.GeneralFirstUp,
+} as const;
+
+const OrderSchema = z
+  .enum(
+    Object.keys(OrderMapping) as [
+      keyof typeof OrderMapping,
+      ...(keyof typeof OrderMapping)[],
+    ],
+  )
+  .optional()
+  .transform((val) => (val ? OrderMapping[val] : undefined))
+  .describe("並び順");
+// Human-readable novel type mappings
+const NovelTypeMapping = {
+  短編: NovelTypeParam.Short,
+  連載中: NovelTypeParam.RensaiNow,
+  完結済連載小説: NovelTypeParam.RensaiEnd,
+  すべての連載小説: NovelTypeParam.Rensai,
+  短編と完結済連載小説: NovelTypeParam.ShortAndRensai,
+} as const;
+
 const NovelTypeSchema = z
-  .nativeEnum(NovelTypeParam)
+  .enum(
+    Object.keys(NovelTypeMapping) as [
+      keyof typeof NovelTypeMapping,
+      ...(keyof typeof NovelTypeMapping)[],
+    ],
+  )
   .optional()
+  .transform((val) => (val ? NovelTypeMapping[val] : undefined))
   .describe("小説タイプ");
+// Human-readable ranking type mappings
+const RankingTypeMapping = {
+  日間: RankingType.Daily,
+  週間: RankingType.Weekly,
+  月間: RankingType.Monthly,
+  四半期: RankingType.Quarterly,
+} as const;
+
 const RankingTypeSchema = z
-  .nativeEnum(RankingType)
+  .enum(
+    Object.keys(RankingTypeMapping) as [
+      keyof typeof RankingTypeMapping,
+      ...(keyof typeof RankingTypeMapping)[],
+    ],
+  )
   .optional()
+  .transform((val) => (val ? RankingTypeMapping[val] : undefined))
   .describe("ランキング種別");
-const R18SiteSchema = z.nativeEnum(R18Site).optional().describe("R18サイト");
-const UserOrderSchema = z
-  .nativeEnum(UserOrder)
+// Human-readable R18 site mappings using R18SiteNotation
+const R18SiteMapping = Object.fromEntries(
+  Object.entries(R18SiteNotation).map(([key, value]) => [value, Number(key)]),
+) as Record<string, R18Site>;
+
+const R18SiteSchema = z
+  .enum(
+    Object.keys(R18SiteMapping) as [
+      keyof typeof R18SiteMapping,
+      ...(keyof typeof R18SiteMapping)[],
+    ],
+  )
   .optional()
+  .transform((val) => (val ? R18SiteMapping[val] : undefined))
+  .describe("R18サイト");
+// Human-readable user order mappings
+const UserOrderMapping = {
+  ユーザIDの新しい順: UserOrder.New,
+  小説投稿数の多い順: UserOrder.NovelCount,
+  レビュー投稿数の多い順: UserOrder.ReviewCount,
+  小説累計文字数の多い順: UserOrder.NovelLength,
+  総合評価ポイントの合計の多い順: UserOrder.SumGlobalPoint,
+  ユーザIDの古い順: UserOrder.Old,
+} as const;
+
+const UserOrderSchema = z
+  .enum(
+    Object.keys(UserOrderMapping) as [
+      keyof typeof UserOrderMapping,
+      ...(keyof typeof UserOrderMapping)[],
+    ],
+  )
+  .optional()
+  .transform((val) => (val ? UserOrderMapping[val] : undefined))
   .describe("ユーザー検索並び順");
-const BuntaiSchema = z.nativeEnum(BuntaiParam).optional().describe("文体");
+// Human-readable buntai mappings
+const BuntaiMapping = {
+  "字下げなし+改行多い": BuntaiParam.NoJisageKaigyouOoi,
+  "字下げなし+改行普通": BuntaiParam.NoJisageKaigyoHutsuu,
+  "字下げあり+改行多い": BuntaiParam.JisageKaigyoOoi,
+  "字下げあり+改行普通": BuntaiParam.JisageKaigyoHutsuu,
+} as const;
+
+const BuntaiSchema = z
+  .enum(
+    Object.keys(BuntaiMapping) as [
+      keyof typeof BuntaiMapping,
+      ...(keyof typeof BuntaiMapping)[],
+    ],
+  )
+  .optional()
+  .transform((val) => (val ? BuntaiMapping[val] : undefined))
+  .describe("文体");
 
 // Human-readable field mappings
 const FieldsMapping = {
