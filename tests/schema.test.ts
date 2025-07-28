@@ -22,6 +22,7 @@ import {
   R18FieldsMapping,
   R18FieldsSchema,
   R18SiteSchema,
+  RankingInputSchema,
   RankingTypeSchema,
   SearchNovelInputSchema,
   SearchUserInputSchema,
@@ -532,6 +533,81 @@ describe("Input schemas validation", () => {
 
     it("should reject invalid start values", () => {
       expect(() => SearchUserInputSchema.parse({ start: 0 })).toThrow();
+    });
+  });
+
+  describe("RankingInputSchema", () => {
+    it("should accept all basic ranking parameters", () => {
+      const input = {
+        date: "2024-01-01",
+        rankingType: "日間",
+        fields: ["小説名", "作者名", "文字数"],
+        limit: 100,
+        offset: 10,
+      };
+      const result = RankingInputSchema.parse(input);
+
+      expect(result.date).toBe("2024-01-01");
+      expect(result.rankingType).toBe(RankingType.Daily);
+      expect(result.fields).toEqual([
+        Fields.title,
+        Fields.writer,
+        Fields.length,
+      ]);
+      expect(result.limit).toBe(100);
+      expect(result.offset).toBe(10);
+    });
+
+    it("should accept genre filtering parameters", () => {
+      const input = {
+        genre: "異世界〔恋愛〕",
+        bigGenre: "ファンタジー",
+      };
+      const result = RankingInputSchema.parse(input);
+
+      expect(result.genre).toBe(Genre.RenaiIsekai);
+      expect(result.bigGenre).toBe(BigGenre.Fantasy);
+    });
+
+    it("should accept undefined genre parameters", () => {
+      const input = {};
+      const result = RankingInputSchema.parse(input);
+
+      expect(result.genre).toBeUndefined();
+      expect(result.bigGenre).toBeUndefined();
+    });
+
+    it("should accept only required fields", () => {
+      const input = {};
+      const result = RankingInputSchema.parse(input);
+
+      expect(result.date).toBeUndefined();
+      expect(result.rankingType).toBeUndefined();
+      expect(result.fields).toBeUndefined();
+      expect(result.limit).toBeUndefined();
+      expect(result.offset).toBeUndefined();
+    });
+
+    it("should reject invalid limit values", () => {
+      expect(() => RankingInputSchema.parse({ limit: 0 })).toThrow();
+      expect(() => RankingInputSchema.parse({ limit: 301 })).toThrow();
+    });
+
+    it("should reject invalid offset values", () => {
+      expect(() => RankingInputSchema.parse({ offset: -1 })).toThrow();
+      expect(() => RankingInputSchema.parse({ offset: 300 })).toThrow();
+    });
+
+    it("should reject invalid genre names", () => {
+      expect(() =>
+        RankingInputSchema.parse({ genre: "無効なジャンル" }),
+      ).toThrow();
+    });
+
+    it("should reject invalid big genre names", () => {
+      expect(() =>
+        RankingInputSchema.parse({ bigGenre: "無効な大ジャンル" }),
+      ).toThrow();
     });
   });
 });

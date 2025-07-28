@@ -295,29 +295,49 @@ export class NarouMCP extends McpAgent {
         description: "小説家になろうのランキングを取得します。",
         inputSchema: RankingInputSchema.shape,
       },
-      async ({ date, rankingType, fields, limit, offset }) => {
+      async ({ date, rankingType, fields, genre, bigGenre, limit, offset }) => {
         const builder = ranking(narouFetch);
 
         if (date) builder.date(new Date(date));
         if (rankingType) builder.type(rankingType);
 
-        const result = await builder.executeWithFields(
-          fields ?? [
-            Fields.ncode,
-            Fields.title,
-            Fields.writer,
-            Fields.keyword,
-            Fields.genre,
-            Fields.all_point,
-            Fields.noveltype,
-            Fields.length,
-          ],
-        );
+        // ジャンルフィルタリングを行う場合は genre/biggenre フィールドを含める
+        const requiredFields = fields ?? [
+          Fields.ncode,
+          Fields.title,
+          Fields.writer,
+          Fields.keyword,
+          Fields.genre,
+          Fields.all_point,
+          Fields.noveltype,
+          Fields.length,
+        ];
+
+        // ジャンルフィルタリングが指定されている場合は必要なフィールドを追加
+        const fieldsWithGenre = [...requiredFields];
+        if (genre && !fieldsWithGenre.includes(Fields.genre)) {
+          fieldsWithGenre.push(Fields.genre);
+        }
+        if (bigGenre && !fieldsWithGenre.includes(Fields.biggenre)) {
+          fieldsWithGenre.push(Fields.biggenre);
+        }
+
+        let result = await builder.executeWithFields(fieldsWithGenre);
+
+        // ジャンルフィルタリングを適用
+        if (genre || bigGenre) {
+          result = result.filter((item) => {
+            if (genre && item.genre !== genre) return false;
+            if (bigGenre && item.biggenre !== bigGenre) return false;
+            return true;
+          });
+        }
+
         return {
           content: [
             {
               type: "text",
-              text: date ? `集計日: ${date}` : "最新ランキング",
+              text: `${date ? `集計日: ${date}` : "最新ランキング"}${genre || bigGenre ? ` (ジャンルフィルタ適用後: ${result.length}件)` : ""}`,
             },
             ...result.slice(offset ?? 0, (offset ?? 0) + (limit ?? 300)).map(
               (item) =>

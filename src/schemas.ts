@@ -380,6 +380,8 @@ export const RankingInputSchema = z.object({
   date: z.string().optional().describe("集計日(YYYY-MM-DD形式)"),
   rankingType: RankingTypeSchema,
   fields: FieldsSchema.optional().describe("取得するフィールド"),
+  genre: GenreSchema,
+  bigGenre: BigGenreSchema,
   limit: z
     .number()
     .min(1)
