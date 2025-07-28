@@ -1,0 +1,348 @@
+import {
+  type BigGenre,
+  BigGenreNotation,
+  BuntaiParam,
+  Fields,
+  type Genre,
+  GenreNotation,
+  NovelTypeParam,
+  Order,
+  R18Fields,
+  type R18Site,
+  R18SiteNotation,
+  RankingType,
+  UserOrder,
+} from "narou/index";
+import { z } from "zod";
+
+// Human-readable genre mappings using GenreNotation
+export const GenreMapping = Object.fromEntries(
+  Object.entries(GenreNotation).map(([key, value]) => [value, Number(key)]),
+) as Record<string, Genre>;
+
+// Human-readable big genre mappings using BigGenreNotation
+export const BigGenreMapping = Object.fromEntries(
+  Object.entries(BigGenreNotation).map(([key, value]) => [value, Number(key)]),
+) as Record<string, BigGenre>;
+
+// 入力スキーマの定義
+export const GenreSchema = z
+  .enum(
+    Object.keys(GenreMapping) as [
+      keyof typeof GenreMapping,
+      ...(keyof typeof GenreMapping)[],
+    ],
+  )
+  .optional()
+  .transform((val) => (val ? GenreMapping[val] : undefined))
+  .describe("ジャンル");
+
+export const BigGenreSchema = z
+  .enum(
+    Object.keys(BigGenreMapping) as [
+      keyof typeof BigGenreMapping,
+      ...(keyof typeof BigGenreMapping)[],
+    ],
+  )
+  .optional()
+  .transform((val) => (val ? BigGenreMapping[val] : undefined))
+  .describe("大ジャンル");
+
+// Human-readable order mappings
+export const OrderMapping = {
+  ブックマーク数の多い順: Order.FavoriteNovelCount,
+  レビュー数の多い順: Order.ReviewCount,
+  総合ポイントの高い順: Order.HyokaDesc,
+  総合ポイントの低い順: Order.HyokaAsc,
+  感想の多い順: Order.ImpressionCount,
+  評価者数の多い順: Order.HyokaCountDesc,
+  評価者数の少ない順: Order.HyokaCountAsc,
+  週間ユニークユーザの多い順: Order.Weekly,
+  小説本文の文字数が多い順: Order.LengthDesc,
+  小説本文の文字数が少ない順: Order.LengthAsc,
+  Nコードが新しい順: Order.NCodeDesc,
+  新着更新順: Order.New,
+  古い順: Order.Old,
+  日間ポイントの高い順: Order.DailyPoint,
+  週間ポイントの高い順: Order.WeeklyPoint,
+  月間ポイントの高い順: Order.MonthlyPoint,
+  四半期ポイントの高い順: Order.QuarterPoint,
+  年間ポイントの高い順: Order.YearlyPoint,
+  初回掲載順: Order.GeneralFirstUp,
+} as const;
+
+export const OrderSchema = z
+  .enum(
+    Object.keys(OrderMapping) as [
+      keyof typeof OrderMapping,
+      ...(keyof typeof OrderMapping)[],
+    ],
+  )
+  .optional()
+  .transform((val) => (val ? OrderMapping[val] : undefined))
+  .describe("並び順");
+
+// Human-readable novel type mappings
+export const NovelTypeMapping = {
+  短編: NovelTypeParam.Short,
+  連載中: NovelTypeParam.RensaiNow,
+  完結済連載小説: NovelTypeParam.RensaiEnd,
+  すべての連載小説: NovelTypeParam.Rensai,
+  短編と完結済連載小説: NovelTypeParam.ShortAndRensai,
+} as const;
+
+export const NovelTypeSchema = z
+  .enum(
+    Object.keys(NovelTypeMapping) as [
+      keyof typeof NovelTypeMapping,
+      ...(keyof typeof NovelTypeMapping)[],
+    ],
+  )
+  .optional()
+  .transform((val) => (val ? NovelTypeMapping[val] : undefined))
+  .describe("小説タイプ");
+
+// Human-readable ranking type mappings
+export const RankingTypeMapping = {
+  日間: RankingType.Daily,
+  週間: RankingType.Weekly,
+  月間: RankingType.Monthly,
+  四半期: RankingType.Quarterly,
+} as const;
+
+export const RankingTypeSchema = z
+  .enum(
+    Object.keys(RankingTypeMapping) as [
+      keyof typeof RankingTypeMapping,
+      ...(keyof typeof RankingTypeMapping)[],
+    ],
+  )
+  .optional()
+  .transform((val) => (val ? RankingTypeMapping[val] : undefined))
+  .describe("ランキング種別");
+
+// Human-readable R18 site mappings using R18SiteNotation
+export const R18SiteMapping = Object.fromEntries(
+  Object.entries(R18SiteNotation).map(([key, value]) => [value, Number(key)]),
+) as Record<string, R18Site>;
+
+export const R18SiteSchema = z
+  .enum(
+    Object.keys(R18SiteMapping) as [
+      keyof typeof R18SiteMapping,
+      ...(keyof typeof R18SiteMapping)[],
+    ],
+  )
+  .optional()
+  .transform((val) => (val ? R18SiteMapping[val] : undefined))
+  .describe("R18サイト");
+
+// Human-readable user order mappings
+export const UserOrderMapping = {
+  ユーザIDの新しい順: UserOrder.New,
+  小説投稿数の多い順: UserOrder.NovelCount,
+  レビュー投稿数の多い順: UserOrder.ReviewCount,
+  小説累計文字数の多い順: UserOrder.NovelLength,
+  総合評価ポイントの合計の多い順: UserOrder.SumGlobalPoint,
+  ユーザIDの古い順: UserOrder.Old,
+} as const;
+
+export const UserOrderSchema = z
+  .enum(
+    Object.keys(UserOrderMapping) as [
+      keyof typeof UserOrderMapping,
+      ...(keyof typeof UserOrderMapping)[],
+    ],
+  )
+  .optional()
+  .transform((val) => (val ? UserOrderMapping[val] : undefined))
+  .describe("ユーザー検索並び順");
+
+// Human-readable buntai mappings
+export const BuntaiMapping = {
+  "字下げなし+改行多い": BuntaiParam.NoJisageKaigyouOoi,
+  "字下げなし+改行普通": BuntaiParam.NoJisageKaigyoHutsuu,
+  "字下げあり+改行多い": BuntaiParam.JisageKaigyoOoi,
+  "字下げあり+改行普通": BuntaiParam.JisageKaigyoHutsuu,
+} as const;
+
+export const BuntaiSchema = z
+  .enum(
+    Object.keys(BuntaiMapping) as [
+      keyof typeof BuntaiMapping,
+      ...(keyof typeof BuntaiMapping)[],
+    ],
+  )
+  .optional()
+  .transform((val) => (val ? BuntaiMapping[val] : undefined))
+  .describe("文体");
+
+// Human-readable field mappings
+export const FieldsMapping = {
+  小説名: Fields.title,
+  Nコード: Fields.ncode,
+  作者のユーザID: Fields.userid,
+  作者名: Fields.writer,
+  あらすじ: Fields.story,
+  大ジャンル: Fields.biggenre,
+  ジャンル: Fields.genre,
+  キーワード: Fields.keyword,
+  初回掲載日: Fields.general_firstup,
+  最終掲載日: Fields.general_lastup,
+  小説タイプ: Fields.noveltype,
+  連載状態: Fields.end,
+  全掲載部分数: Fields.general_all_no,
+  文字数: Fields.length,
+  読了時間: Fields.time,
+  長期連載停止中: Fields.isstop,
+  R15: Fields.isr15,
+  ボーイズラブ: Fields.isbl,
+  ガールズラブ: Fields.isgl,
+  残酷な描写あり: Fields.iszankoku,
+  異世界転生: Fields.istensei,
+  異世界転移: Fields.istenni,
+  総合評価ポイント: Fields.global_point,
+  日間ポイント: Fields.daily_point,
+  週間ポイント: Fields.weekly_point,
+  月間ポイント: Fields.monthly_point,
+  四半期ポイント: Fields.quarter_point,
+  年間ポイント: Fields.yearly_point,
+  ブックマーク数: Fields.fav_novel_cnt,
+  感想数: Fields.impression_cnt,
+  レビュー数: Fields.review_cnt,
+  評価ポイント: Fields.all_point,
+  評価者数: Fields.all_hyoka_cnt,
+  挿絵の数: Fields.sasie_cnt,
+  会話率: Fields.kaiwaritu,
+  小説の更新日時: Fields.novelupdated_at,
+  最終更新日時: Fields.updated_at,
+} as const;
+
+export const FieldsSchema = z
+  .array(
+    z.enum(
+      Object.keys(FieldsMapping) as [
+        keyof typeof FieldsMapping,
+        ...(keyof typeof FieldsMapping)[],
+      ],
+    ),
+  )
+  .optional()
+  .transform((val) => val?.map((key) => FieldsMapping[key]))
+  .describe("取得するフィールド");
+
+// Human-readable R18 field mappings
+export const R18FieldsMapping = {
+  小説名: R18Fields.title,
+  Nコード: R18Fields.ncode,
+  作者のユーザID: R18Fields.userid,
+  作者名: R18Fields.writer,
+  あらすじ: R18Fields.story,
+  掲載サイト: R18Fields.nocgenre,
+  キーワード: R18Fields.keyword,
+  初回掲載日: R18Fields.general_firstup,
+  最終掲載日: R18Fields.general_lastup,
+  小説タイプ: R18Fields.noveltype,
+  連載状態: R18Fields.end,
+  全掲載部分数: R18Fields.general_all_no,
+  文字数: R18Fields.length,
+  読了時間: R18Fields.time,
+  長期連載停止中: R18Fields.isstop,
+  ボーイズラブ: R18Fields.isbl,
+  ガールズラブ: R18Fields.isgl,
+  残酷な描写あり: R18Fields.iszankoku,
+  異世界転生: R18Fields.istensei,
+  異世界転移: R18Fields.istenni,
+  総合評価ポイント: R18Fields.global_point,
+  日間ポイント: R18Fields.daily_point,
+  週間ポイント: R18Fields.weekly_point,
+  月間ポイント: R18Fields.monthly_point,
+  四半期ポイント: R18Fields.quarter_point,
+  年間ポイント: R18Fields.yearly_point,
+  R18ブックマーク数: R18Fields.fav_novel_cnt,
+  感想数: R18Fields.impression_cnt,
+  レビュー数: R18Fields.review_cnt,
+  評価ポイント: R18Fields.all_point,
+  評価者数: R18Fields.all_hyoka_cnt,
+  挿絵の数: R18Fields.sasie_cnt,
+  会話率: R18Fields.kaiwaritu,
+  小説の更新日時: R18Fields.novelupdated_at,
+  最終更新日時: R18Fields.updated_at,
+} as const;
+
+export const R18FieldsSchema = z
+  .array(
+    z.enum(
+      Object.keys(R18FieldsMapping) as [
+        keyof typeof R18FieldsMapping,
+        ...(keyof typeof R18FieldsMapping)[],
+      ],
+    ),
+  )
+  .optional()
+  .transform((val) => val?.map((key) => R18FieldsMapping[key]))
+  .describe("R18検索用の取得フィールド");
+
+// 小説検索の入力スキーマ
+export const SearchNovelInputSchema = z.object({
+  word: z.string().optional().describe("検索キーワード"),
+  fields: FieldsSchema,
+  genre: GenreSchema,
+  bigGenre: BigGenreSchema,
+  order: OrderSchema,
+  novelType: NovelTypeSchema,
+  limit: z.number().min(1).max(500).optional().describe("取得件数（1-500）"),
+  start: z.number().min(1).optional().describe("取得開始位置"),
+  ncode: z.string().optional().describe("Nコード"),
+  isR15: z.boolean().optional().describe("R15作品を含む"),
+  isBL: z.boolean().optional().describe("BL作品を含む"),
+  isGL: z.boolean().optional().describe("GL作品を含む"),
+  isZankoku: z.boolean().optional().describe("残酷な描写ありを含む"),
+  isTensei: z.boolean().optional().describe("異世界転生を含む"),
+  isTenni: z.boolean().optional().describe("異世界転移を含む"),
+  minLength: z.number().optional().describe("最小文字数"),
+  maxLength: z.number().optional().describe("最大文字数"),
+  buntai: BuntaiSchema,
+});
+
+// ランキング検索の入力スキーマ
+export const RankingInputSchema = z.object({
+  date: z.string().optional().describe("集計日(YYYY-MM-DD形式)"),
+  rankingType: RankingTypeSchema,
+  fields: FieldsSchema.optional().describe("取得するフィールド"),
+  limit: z
+    .number()
+    .min(1)
+    .max(300)
+    .optional()
+    .describe("取得件数（デフォルト・最大300）"),
+  offset: z.number().min(0).max(299).optional().describe("取得開始位置"),
+});
+
+// R18検索の入力スキーマ
+export const SearchR18InputSchema = z.object({
+  word: z.string().optional().describe("検索キーワード"),
+  fields: R18FieldsSchema,
+  r18Site: R18SiteSchema,
+  order: OrderSchema,
+  novelType: NovelTypeSchema,
+  limit: z.number().min(1).max(500).optional().describe("取得件数（1-500）"),
+  start: z.number().min(1).optional().describe("取得開始位置"),
+});
+
+// ユーザー検索の入力スキーマ
+export const SearchUserInputSchema = z.object({
+  word: z.string().optional().describe("検索キーワード"),
+  order: UserOrderSchema,
+  limit: z.number().min(1).max(500).optional().describe("取得件数（1-500）"),
+  start: z.number().min(1).optional().describe("取得開始位置"),
+  minNovel: z.number().optional().describe("最小小説投稿数"),
+  maxNovel: z.number().optional().describe("最大小説投稿数"),
+  minReview: z.number().optional().describe("最小レビュー投稿数"),
+  maxReview: z.number().optional().describe("最大レビュー投稿数"),
+});
+
+// ランキング履歴の入力スキーマ
+export const RankingHistoryInputSchema = z.object({
+  ncode: z.string().describe("小説のNコード"),
+});
