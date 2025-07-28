@@ -106,41 +106,80 @@ export class NarouMCP extends McpAgent {
         inputSchema: SearchNovelInputSchema.shape,
       },
       async ({
+        // 基本検索
         word,
-        fields,
-        genre,
-        bigGenre,
-        order,
-        novelType,
-        limit,
-        start,
+        notword,
         ncode,
+        userId,
+
+        // ジャンル・カテゴリ
+        genre,
+        notGenre,
+        bigGenre,
+        notBigGenre,
+
+        // 作品属性
+        novelType,
+        buntai,
+
+        // 文字数・時間・統計値
+        minLength,
+        maxLength,
+        minTime,
+        maxTime,
+        minKaiwaritu,
+        maxKaiwaritu,
+        minSasie,
+        maxSasie,
+
+        // 日時指定
+        lastUpdateFrom,
+        lastUpdateTo,
+        lastNovelUpdateFrom,
+        lastNovelUpdateTo,
+
+        // 特殊フィルター
         isR15,
         isBL,
         isGL,
         isZankoku,
         isTensei,
         isTenni,
-        minLength,
-        maxLength,
-        buntai,
+        isStop,
+        isPickup,
+        isTT,
+
+        // 検索対象指定
+        byTitle,
+        byOutline,
+        byKeyword,
+        byAuthor,
+
+        // 出力制御
+        fields,
+        order,
+        limit,
+        start,
       }) => {
         const builder = search(undefined, narouFetch);
 
+        // 基本検索
         if (word) builder.word(word);
-        if (genre) builder.genre(genre);
-        if (bigGenre) builder.bigGenre(bigGenre);
-        if (order) builder.order(order);
-        if (novelType) builder.type(novelType);
-        if (limit) builder.limit(limit);
-        if (start) builder.start(start);
+        if (notword) builder.notWord(notword);
         if (ncode) builder.ncode(ncode);
-        if (isR15 !== undefined) builder.isR15(isR15);
-        if (isBL !== undefined) builder.isBL(isBL);
-        if (isGL !== undefined) builder.isGL(isGL);
-        if (isZankoku !== undefined) builder.isZankoku(isZankoku);
-        if (isTensei !== undefined) builder.isTensei(isTensei);
-        if (isTenni !== undefined) builder.isTenni(isTenni);
+        if (userId) builder.userId(userId);
+
+        // ジャンル・カテゴリ
+        if (genre) builder.genre(genre);
+        if (notGenre) builder.notGenre(notGenre);
+        if (bigGenre) builder.bigGenre(bigGenre);
+        if (notBigGenre) builder.notBigGenre(notBigGenre);
+
+        // 作品属性
+        if (novelType) builder.type(novelType);
+        if (buntai) builder.buntai(buntai);
+
+        // 文字数・時間・統計値
         if (minLength !== undefined || maxLength !== undefined) {
           const lengthRange = [
             minLength ?? 0,
@@ -148,7 +187,59 @@ export class NarouMCP extends McpAgent {
           ];
           builder.length(lengthRange);
         }
-        if (buntai) builder.buntai(buntai);
+        if (minTime !== undefined || maxTime !== undefined) {
+          const timeRange = [minTime ?? 0, maxTime ?? Number.MAX_SAFE_INTEGER];
+          builder.time(timeRange);
+        }
+        if (minKaiwaritu !== undefined && maxKaiwaritu !== undefined) {
+          builder.kaiwaritu(minKaiwaritu, maxKaiwaritu);
+        } else if (minKaiwaritu !== undefined) {
+          builder.kaiwaritu(minKaiwaritu);
+        }
+        if (minSasie !== undefined || maxSasie !== undefined) {
+          const sasieRange = [
+            minSasie ?? 0,
+            maxSasie ?? Number.MAX_SAFE_INTEGER,
+          ];
+          builder.sasie(sasieRange);
+        }
+
+        // 日時指定
+        if (lastUpdateFrom && lastUpdateTo) {
+          builder.lastUpdate(new Date(lastUpdateFrom), new Date(lastUpdateTo));
+        } else if (lastUpdateFrom) {
+          builder.lastUpdate(lastUpdateFrom);
+        }
+        if (lastNovelUpdateFrom && lastNovelUpdateTo) {
+          builder.lastNovelUpdate(
+            new Date(lastNovelUpdateFrom),
+            new Date(lastNovelUpdateTo),
+          );
+        } else if (lastNovelUpdateFrom) {
+          builder.lastNovelUpdate(lastNovelUpdateFrom);
+        }
+
+        // 特殊フィルター
+        if (isR15 !== undefined) builder.isR15(isR15);
+        if (isBL !== undefined) builder.isBL(isBL);
+        if (isGL !== undefined) builder.isGL(isGL);
+        if (isZankoku !== undefined) builder.isZankoku(isZankoku);
+        if (isTensei !== undefined) builder.isTensei(isTensei);
+        if (isTenni !== undefined) builder.isTenni(isTenni);
+        if (isStop !== undefined) builder.isStop(isStop);
+        if (isPickup) builder.isPickup();
+        if (isTT) builder.isTT();
+
+        // 検索対象指定
+        if (byTitle !== undefined) builder.byTitle(byTitle);
+        if (byOutline !== undefined) builder.byOutline(byOutline);
+        if (byKeyword !== undefined) builder.byKeyword(byKeyword);
+        if (byAuthor !== undefined) builder.byAuthor(byAuthor);
+
+        // 出力制御
+        if (order) builder.order(order);
+        if (limit) builder.limit(limit);
+        if (start) builder.start(start);
 
         builder.fields(
           fields ?? [
@@ -327,25 +418,43 @@ export class NarouMCP extends McpAgent {
         inputSchema: SearchUserInputSchema.shape,
       },
       async ({
+        // 基本検索
         word,
-        order,
-        limit,
-        start,
+        notword,
+        userId,
+        name1st,
+
+        // フィルター
         minNovel,
         maxNovel,
         minReview,
         maxReview,
+
+        // 出力制御
+        fields,
+        order,
+        limit,
+        start,
       }) => {
         const builder = searchUser(undefined, narouFetch);
 
+        // 基本検索
         if (word) builder.word(word);
-        if (order) builder.order(order);
-        if (limit) builder.limit(limit);
-        if (start) builder.start(start);
+        if (notword) builder.notWord(notword);
+        if (userId !== undefined) builder.userId(userId);
+        if (name1st) builder.name1st(name1st);
+
+        // フィルター
         if (minNovel !== undefined) builder.minNovel(minNovel);
         if (maxNovel !== undefined) builder.maxNovel(maxNovel);
         if (minReview !== undefined) builder.minReview(minReview);
         if (maxReview !== undefined) builder.maxReview(maxReview);
+
+        // 出力制御
+        if (fields) builder.fields(fields);
+        if (order) builder.order(order);
+        if (limit) builder.limit(limit);
+        if (start) builder.start(start);
 
         const result = await builder.execute();
         return {
