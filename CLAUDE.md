@@ -92,12 +92,12 @@ When implementing the Narou MCP server:
 
 - **Test Framework**: Vitest with Cloudflare Workers pool
 - **Test Location**: Tests should be placed alongside source files with `.test.ts` extension
-- Run `pnpm test` before committing changes
+- Run `pnpm run test` before committing changes
 
 ## Type Safety
 
-- Always run `pnpm cf-typegen` after modifying `wrangler.jsonc` to regenerate environment types
-- Use `pnpm check-types` to verify TypeScript compilation
+- Always run `pnpm run cf-typegen` after modifying `wrangler.jsonc` to regenerate environment types
+- Use `pnpm run check-types` to verify TypeScript compilation
 - The `Env` interface is automatically generated and includes all Cloudflare bindings
 
 ## Commit Helper Agent
@@ -105,7 +105,7 @@ When implementing the Narou MCP server:
 This project recommends using the `commit-helper` agent to create commit messages.
 
 Before committing, always:
-1. Run `pnpm checks` to ensure all checks pass
+1. Run `pnpm run checks` to ensure all checks pass
 2. Remove unnecessary console logs and temporary code
 3. Add tests for new features
 
@@ -114,3 +114,4 @@ Before committing, always:
 @docs/commit.md
 @docs/testing.md
 
+Narou Library LLM texts: [docs/narou.md](docs/narou.md)
