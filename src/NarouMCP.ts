@@ -105,28 +105,26 @@ export class NarouMCP extends McpAgent {
         description: "小説家になろうから小説を検索します。",
         inputSchema: SearchNovelInputSchema.shape,
       },
-      async (input) => {
-        const {
-          word,
-          fields,
-          genre,
-          bigGenre,
-          order,
-          novelType,
-          limit,
-          start,
-          ncode,
-          isR15,
-          isBL,
-          isGL,
-          isZankoku,
-          isTensei,
-          isTenni,
-          minLength,
-          maxLength,
-          buntai,
-        } = input;
-
+      async ({
+        word,
+        fields,
+        genre,
+        bigGenre,
+        order,
+        novelType,
+        limit,
+        start,
+        ncode,
+        isR15,
+        isBL,
+        isGL,
+        isZankoku,
+        isTensei,
+        isTenni,
+        minLength,
+        maxLength,
+        buntai,
+      }) => {
         const builder = search(undefined, narouFetch);
 
         if (word) builder.word(word);
@@ -265,9 +263,7 @@ export class NarouMCP extends McpAgent {
         description: "R18小説を検索します。",
         inputSchema: SearchR18InputSchema.shape,
       },
-      async (input) => {
-        const { word, fields, r18Site, order, novelType, limit, start } = input;
-
+      async ({ word, fields, r18Site, order, novelType, limit, start }) => {
         const builder = searchR18(undefined, narouFetch);
 
         if (word) builder.word(word);
@@ -330,18 +326,16 @@ export class NarouMCP extends McpAgent {
         description: "小説家になろうのユーザーを検索します。",
         inputSchema: SearchUserInputSchema.shape,
       },
-      async (input) => {
-        const {
-          word,
-          order,
-          limit,
-          start,
-          minNovel,
-          maxNovel,
-          minReview,
-          maxReview,
-        } = input;
-
+      async ({
+        word,
+        order,
+        limit,
+        start,
+        minNovel,
+        maxNovel,
+        minReview,
+        maxReview,
+      }) => {
         const builder = searchUser(undefined, narouFetch);
 
         if (word) builder.word(word);
