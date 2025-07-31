@@ -567,9 +567,9 @@ export function initializeNarouMcpServer(
   server.registerTool(
     "get_ranking_history",
     {
-      title: "ランキング履歴取得",
+      title: "なろう殿堂入り（ランキング履歴）取得",
       description:
-        "指定した小説のランキング履歴を取得します。デフォルト50件制限で、ランキングタイプや日付範囲でフィルタリング可能です。",
+        "指定した小説が過去にどのランキングに載ったか（殿堂入りしたか）を取得します。",
       inputSchema: RankingHistoryInputSchema.shape,
     },
     async (input) => {
