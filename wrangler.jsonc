@@ -11,13 +11,6 @@
 		"nodejs_compat",
 		"nodejs_compat_populate_process_env"
 	],
-	"durable_objects": {
-		"bindings": [
-			{
-				"name": "MCP_OBJECT",
-			}
-		]
-	},
 	"migrations": [
 		{
 			"tag": "v1",
