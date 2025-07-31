@@ -4,7 +4,6 @@ import {
   Fields,
   GenreNotation,
   NarouNovelFetch,
-  R18Fields,
   R18SiteNotation,
   RankingType,
   ranking,
@@ -114,18 +113,7 @@ export function initializeNarouMcpServer(
     },
     async ({ ncode, fields }) => {
       const builder = search(undefined, narouFetch).ncode(ncode);
-      builder.fields(
-        fields ?? [
-          Fields.ncode,
-          Fields.title,
-          Fields.writer,
-          Fields.keyword,
-          Fields.genre,
-          Fields.all_point,
-          Fields.noveltype,
-          Fields.length,
-        ],
-      );
+      if (fields) builder.fields(fields);
       builder.opt("weekly");
 
       const result = await builder.execute();
@@ -217,7 +205,7 @@ export function initializeNarouMcpServer(
       fields,
       order,
       limit,
-      start,
+      offset,
     }) => {
       const builder = search(undefined, narouFetch);
 
@@ -294,20 +282,9 @@ export function initializeNarouMcpServer(
       // 出力制御
       if (order) builder.order(order);
       if (limit) builder.limit(limit);
-      if (start) builder.start(start);
+      if (offset > 0) builder.start(offset + 1); // APIは1ベースなので+1
 
-      builder.fields(
-        fields ?? [
-          Fields.ncode,
-          Fields.title,
-          Fields.writer,
-          Fields.keyword,
-          Fields.genre,
-          Fields.all_point,
-          Fields.noveltype,
-          Fields.length,
-        ],
-      );
+      if (fields) builder.fields(fields);
       builder.opt("weekly");
 
       const result = await builder.execute();
@@ -315,7 +292,7 @@ export function initializeNarouMcpServer(
         content: [
           {
             type: "text",
-            text: `検索結果: ${result.allcount}件中 ${result.start}〜${result.start + result.length - 1}件目`,
+            text: `検索結果: ${result.allcount}件中 ${offset + 1}〜${offset + result.length}件目`,
           },
           ...result.values.map(
             (novel) =>
@@ -363,20 +340,8 @@ export function initializeNarouMcpServer(
         builder.type(rankingType);
       }
 
-      // ジャンルフィルタリングを行う場合は genre/biggenre フィールドを含める
-      const requiredFields = fields ?? [
-        Fields.ncode,
-        Fields.title,
-        Fields.writer,
-        Fields.keyword,
-        Fields.genre,
-        Fields.all_point,
-        Fields.noveltype,
-        Fields.length,
-      ];
-
       // ジャンルフィルタリングが指定されている場合は必要なフィールドを追加
-      const fieldsWithGenre = [...requiredFields];
+      const fieldsWithGenre = [...fields];
       if (genre && !fieldsWithGenre.includes(Fields.genre)) {
         fieldsWithGenre.push(Fields.genre);
       }
@@ -384,7 +349,9 @@ export function initializeNarouMcpServer(
         fieldsWithGenre.push(Fields.biggenre);
       }
 
-      let result = await builder.executeWithFields(fieldsWithGenre);
+      let result = await builder.executeWithFields(
+        fieldsWithGenre.length > 0 ? fieldsWithGenre : fields,
+      );
 
       // ジャンルフィルタリングを適用
       if (genre || bigGenre) {
@@ -408,7 +375,7 @@ export function initializeNarouMcpServer(
             type: "text",
             text: `${dateMessage}${genre || bigGenre ? ` (ジャンルフィルタ適用後: ${result.length}件)` : ""}`,
           },
-          ...result.slice(offset ?? 0, (offset ?? 0) + (limit ?? 300)).map(
+          ...result.slice(offset, offset + limit).map(
             (item) =>
               ({
                 type: "text",
@@ -443,7 +410,7 @@ export function initializeNarouMcpServer(
       description: "R18小説を検索します。",
       inputSchema: SearchR18InputSchema.shape,
     },
-    async ({ word, fields, r18Site, order, novelType, limit, start }) => {
+    async ({ word, fields, r18Site, order, novelType, limit, offset }) => {
       const builder = searchR18(undefined, narouFetch);
 
       if (word) builder.word(word);
@@ -451,20 +418,9 @@ export function initializeNarouMcpServer(
       if (order) builder.order(order);
       if (novelType) builder.type(novelType);
       if (limit) builder.limit(limit);
-      if (start) builder.start(start);
+      if (offset > 0) builder.start(offset + 1); // APIは1ベースなので+1
 
-      builder.fields(
-        fields ?? [
-          R18Fields.ncode,
-          R18Fields.title,
-          R18Fields.writer,
-          R18Fields.keyword,
-          R18Fields.nocgenre,
-          R18Fields.all_point,
-          R18Fields.noveltype,
-          R18Fields.length,
-        ],
-      );
+      if (fields) builder.fields(fields);
       builder.opt("weekly");
 
       const result = await builder.execute();
@@ -472,7 +428,7 @@ export function initializeNarouMcpServer(
         content: [
           {
             type: "text",
-            text: `R18検索結果: ${result.allcount}件中 ${result.start}〜${result.start + result.length - 1}件目`,
+            text: `R18検索結果: ${result.allcount}件中 ${offset + 1}〜${offset + result.length}件目`,
           },
           ...result.values.map(
             (novel) =>
@@ -523,7 +479,7 @@ export function initializeNarouMcpServer(
       fields,
       order,
       limit,
-      start,
+      offset,
     }) => {
       const builder = searchUser(undefined, narouFetch);
 
@@ -543,14 +499,14 @@ export function initializeNarouMcpServer(
       if (fields) builder.fields(fields);
       if (order) builder.order(order);
       if (limit) builder.limit(limit);
-      if (start) builder.start(start);
+      if (offset > 0) builder.start(offset + 1); // APIは1ベースなので+1
 
       const result = await builder.execute();
       return {
         content: [
           {
             type: "text",
-            text: `ユーザー検索結果: ${result.allcount}件中 ${result.start}〜${result.start + result.length - 1}件目`,
+            text: `ユーザー検索結果: ${result.allcount}件中 ${offset + 1}〜${offset + result.length}件目`,
           },
           ...result.values.map(
             (user) =>

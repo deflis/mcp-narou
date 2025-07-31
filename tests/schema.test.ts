@@ -40,9 +40,18 @@ describe("Human-readable field schemas", () => {
       expect(result).toEqual([Fields.title, Fields.writer, Fields.length]);
     });
 
-    it("should accept undefined and return undefined", () => {
+    it("should provide default fields when undefined", () => {
       const result = FieldsSchema.parse(undefined);
-      expect(result).toBeUndefined();
+      expect(result).toEqual([
+        Fields.ncode,
+        Fields.title,
+        Fields.writer,
+        Fields.keyword,
+        Fields.genre,
+        Fields.all_point,
+        Fields.noveltype,
+        Fields.length,
+      ]);
     });
 
     it("should transform all valid field names", () => {
@@ -73,9 +82,18 @@ describe("Human-readable field schemas", () => {
       ]);
     });
 
-    it("should accept undefined and return undefined", () => {
+    it("should provide default R18 fields when undefined", () => {
       const result = R18FieldsSchema.parse(undefined);
-      expect(result).toBeUndefined();
+      expect(result).toEqual([
+        R18Fields.ncode,
+        R18Fields.title,
+        R18Fields.writer,
+        R18Fields.keyword,
+        R18Fields.nocgenre,
+        R18Fields.all_point,
+        R18Fields.noveltype,
+        R18Fields.length,
+      ]);
     });
 
     it("should transform all valid R18 field names", () => {
@@ -312,6 +330,10 @@ describe("Human-readable enum schemas", () => {
       const result = UserFieldsSchema.parse(undefined);
       expect(result).toBeUndefined();
     });
+    it("should provide default user fields when undefined", () => {
+      const result = UserFieldsSchema.parse(undefined);
+      expect(result).toBeUndefined(); // デフォルト値は設定されていないため undefined
+    });
 
     it("should transform all valid user field names", () => {
       const allFieldNames = Object.keys(
@@ -456,7 +478,7 @@ describe("Input schemas validation", () => {
         fields: ["小説名", "作者名", "文字数"],
         order: "ブックマーク数の多い順",
         limit: 100,
-        start: 20,
+        offset: 20,
       };
       const result = SearchNovelInputSchema.parse(input);
 
@@ -467,7 +489,7 @@ describe("Input schemas validation", () => {
       ]);
       expect(result.order).toBe(Order.FavoriteNovelCount);
       expect(result.limit).toBe(100);
-      expect(result.start).toBe(20);
+      expect(result.offset).toBe(20);
     });
 
     it("should reject invalid limit values", () => {
@@ -475,8 +497,8 @@ describe("Input schemas validation", () => {
       expect(() => SearchNovelInputSchema.parse({ limit: 501 })).toThrow();
     });
 
-    it("should reject invalid start values", () => {
-      expect(() => SearchNovelInputSchema.parse({ start: 0 })).toThrow();
+    it("should reject invalid offset values", () => {
+      expect(() => SearchNovelInputSchema.parse({ offset: -1 })).toThrow();
     });
   });
 
@@ -516,14 +538,14 @@ describe("Input schemas validation", () => {
         fields: ["ユーザー名", "小説投稿数", "レビュー投稿数"],
         order: "小説投稿数の多い順",
         limit: 50,
-        start: 10,
+        offset: 10,
       };
       const result = SearchUserInputSchema.parse(input);
 
       expect(result.fields).toEqual(["n", "nc", "rc"]);
       expect(result.order).toBe(UserOrder.NovelCount);
       expect(result.limit).toBe(50);
-      expect(result.start).toBe(10);
+      expect(result.offset).toBe(10);
     });
 
     it("should reject invalid limit values", () => {
@@ -531,8 +553,8 @@ describe("Input schemas validation", () => {
       expect(() => SearchUserInputSchema.parse({ limit: 501 })).toThrow();
     });
 
-    it("should reject invalid start values", () => {
-      expect(() => SearchUserInputSchema.parse({ start: 0 })).toThrow();
+    it("should reject invalid offset values", () => {
+      expect(() => SearchUserInputSchema.parse({ offset: -1 })).toThrow();
     });
   });
 
@@ -583,9 +605,9 @@ describe("Input schemas validation", () => {
 
       expect(result.date).toBeUndefined();
       expect(result.rankingType).toBeUndefined();
-      expect(result.fields).toBeUndefined();
-      expect(result.limit).toBeUndefined();
-      expect(result.offset).toBeUndefined();
+      expect(result.fields).toContainEqual(Fields.title);
+      expect(result.limit).toEqual(10);
+      expect(result.offset).toEqual(0);
     });
 
     it("should reject invalid limit values", () => {

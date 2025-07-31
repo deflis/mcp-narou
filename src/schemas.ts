@@ -228,6 +228,16 @@ export const FieldsSchema = z
     ),
   )
   .optional()
+  .default([
+    "Nコード",
+    "小説名",
+    "作者名",
+    "キーワード",
+    "ジャンル",
+    "評価ポイント",
+    "小説タイプ",
+    "文字数",
+  ])
   .transform((val) => val?.map((key) => FieldsMapping[key]))
   .describe("取得するフィールド");
 
@@ -280,6 +290,16 @@ export const R18FieldsSchema = z
     ),
   )
   .optional()
+  .default([
+    "Nコード",
+    "小説名",
+    "作者名",
+    "キーワード",
+    "掲載サイト",
+    "評価ポイント",
+    "小説タイプ",
+    "文字数",
+  ])
   .transform((val) => val?.map((key) => R18FieldsMapping[key]))
   .describe("R18検索用の取得フィールド");
 
@@ -370,25 +390,20 @@ export const SearchNovelInputSchema = z.object({
 
   // 出力制御
   fields: FieldsSchema,
-  order: OrderSchema,
-  limit: z.number().min(1).max(500).optional().describe("取得件数（1-500）"),
-  start: z.number().min(1).optional().describe("取得開始位置"),
+  order: OrderSchema.default("新着更新順"),
+  limit: z.number().min(1).max(500).default(20).describe("取得件数（1-500）"),
+  offset: z.number().min(0).default(0).describe("取得開始位置（0ベース）"),
 });
 
 // ランキング検索の入力スキーマ
 export const RankingInputSchema = z.object({
   date: z.string().optional().describe("集計日(YYYY-MM-DD形式)"),
   rankingType: RankingTypeSchema,
-  fields: FieldsSchema.optional().describe("取得するフィールド"),
+  fields: FieldsSchema.describe("取得するフィールド"),
   genre: GenreSchema,
   bigGenre: BigGenreSchema,
-  limit: z
-    .number()
-    .min(1)
-    .max(300)
-    .optional()
-    .describe("取得件数（デフォルト・最大300）"),
-  offset: z.number().min(0).max(299).optional().describe("取得開始位置"),
+  limit: z.number().min(1).max(300).default(10).describe("取得件数"),
+  offset: z.number().min(0).max(299).default(0).describe("取得開始位置"),
 });
 
 // R18検索の入力スキーマ
@@ -396,10 +411,10 @@ export const SearchR18InputSchema = z.object({
   word: z.string().optional().describe("検索キーワード"),
   fields: R18FieldsSchema,
   r18Site: R18SiteSchema,
-  order: OrderSchema,
+  order: OrderSchema.default("新着更新順"),
   novelType: NovelTypeSchema,
-  limit: z.number().min(1).max(500).optional().describe("取得件数（1-500）"),
-  start: z.number().min(1).optional().describe("取得開始位置"),
+  limit: z.number().min(1).max(500).default(20).describe("取得件数（1-500）"),
+  offset: z.number().min(0).default(0).describe("取得開始位置（0ベース）"),
 });
 
 // ユーザーフィールドマッピング
@@ -443,9 +458,9 @@ export const SearchUserInputSchema = z.object({
 
   // 出力制御
   fields: UserFieldsSchema,
-  order: UserOrderSchema,
-  limit: z.number().min(1).max(500).optional().describe("取得件数（1-500）"),
-  start: z.number().min(1).optional().describe("取得開始位置"),
+  order: UserOrderSchema.default("ユーザIDの新しい順"),
+  limit: z.number().min(1).max(500).default(20).describe("取得件数（1-500）"),
+  offset: z.number().min(0).default(0).describe("取得開始位置（0ベース）"),
 });
 
 // ランキング履歴の入力スキーマ
