@@ -6,6 +6,7 @@ import {
   NarouNovelFetch,
   R18Fields,
   R18SiteNotation,
+  RankingType,
   ranking,
   rankingHistory,
   search,
@@ -40,11 +41,11 @@ const narouFetch = new NarouNovelFetch(fetchWrapper);
  * - 月間・四半期: 1日に調整
  * - 日間: そのまま
  */
-function adjustDateForRanking(date: Date, rankingType: string): Date {
+function adjustDateForRanking(date: Date, rankingType: RankingType): Date {
   const adjustedDate = new Date(date);
 
   switch (rankingType) {
-    case "w": {
+    case RankingType.Weekly: {
       // 週間
       // 火曜日（曜日番号2）に調整
       const dayOfWeek = adjustedDate.getDay();
@@ -76,14 +77,14 @@ function adjustDateForRanking(date: Date, rankingType: string): Date {
       break;
     }
 
-    case "m": // 月間
-    case "q": // 四半期
+    case RankingType.Monthly: // 月間
+    case RankingType.Quarterly: // 四半期
       // 1日に調整
       adjustedDate.setDate(1);
       break;
 
-    default:
-      // 日間（"d"）やその他の場合はそのまま
+    case RankingType.Daily: // 日間
+      // 日間（"d"）はそのまま
       break;
   }
 
