@@ -568,20 +568,52 @@ export function initializeNarouMcpServer(
     "get_ranking_history",
     {
       title: "ランキング履歴取得",
-      description: "指定した小説のランキング履歴を取得します。",
+      description:
+        "指定した小説のランキング履歴を取得します。デフォルト50件制限で、ランキングタイプや日付範囲でフィルタリング可能です。",
       inputSchema: RankingHistoryInputSchema.shape,
     },
     async (input) => {
-      const { ncode } = input;
+      const {
+        ncode,
+        limit = 50,
+        offset = 0,
+        rankingType,
+        dateFrom,
+        dateTo,
+      } = input;
 
-      const result = await rankingHistory(ncode, narouFetch);
+      let result = await rankingHistory(ncode, narouFetch);
+
+      // ランキングタイプでフィルタリング
+      if (rankingType) {
+        result = result.filter((history) => history.type === rankingType);
+      }
+
+      // 日付範囲でフィルタリング
+      if (dateFrom || dateTo) {
+        result = result.filter((history) => {
+          const historyDate = history.date.toISOString().split("T")[0];
+
+          if (dateFrom && historyDate < dateFrom) return false;
+          if (dateTo && historyDate > dateTo) return false;
+          return true;
+        });
+      }
+
+      // ソート（日付降順）
+      result.sort((a, b) => b.date.getTime() - a.date.getTime());
+
+      // オフセットと制限を適用
+      const totalCount = result.length;
+      const paginatedResult = result.slice(offset, offset + limit);
+
       return {
         content: [
           {
             type: "text",
-            text: `ランキング履歴結果: ${result.length}件`,
+            text: `ランキング履歴結果: 全${totalCount}件中 ${offset + 1}〜${offset + paginatedResult.length}件目${rankingType ? ` (${rankingType}のみ)` : ""}${dateFrom || dateTo ? ` (${dateFrom || "開始"}〜${dateTo || "終了"})` : ""}`,
           },
-          ...result.map(
+          ...paginatedResult.map(
             (history) =>
               ({
                 type: "text",

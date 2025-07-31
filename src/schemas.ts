@@ -451,4 +451,19 @@ export const SearchUserInputSchema = z.object({
 // ランキング履歴の入力スキーマ
 export const RankingHistoryInputSchema = z.object({
   ncode: z.string().describe("小説のNコード"),
+  limit: z
+    .number()
+    .min(1)
+    .optional()
+    .default(50)
+    .describe("取得件数制限（デフォルト：50件）"),
+  offset: z
+    .number()
+    .min(0)
+    .optional()
+    .default(0)
+    .describe("取得開始位置（デフォルト：0）"),
+  rankingType: RankingTypeSchema.describe("特定のランキングタイプのみ取得"),
+  dateFrom: z.string().optional().describe("集計日開始（YYYY-MM-DD形式）"),
+  dateTo: z.string().optional().describe("集計日終了（YYYY-MM-DD形式）"),
 });
