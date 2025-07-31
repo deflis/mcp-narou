@@ -10,12 +10,13 @@ When in doubt, keep it simple. Follow the Keep it simple, stupid (KISS) principl
 
 ## Project Overview
 
-This is a Cloudflare Workers project for creating an MCP (Model Context Protocol) server that interfaces with 小説家になろう (Narou) - a Japanese web novel platform. The project uses Cloudflare Durable Objects for state management and the MCP SDK for protocol implementation.
+This is a Cloudflare Workers project for creating an MCP (Model Context Protocol) server that interfaces with 小説家になろう (Narou) - a Japanese web novel platform. The project uses Hono as the web framework and integrates with MCP through `@hono/mcp` for seamless protocol handling.
 
 ## Key Dependencies
 
 - `@modelcontextprotocol/sdk`: MCP protocol implementation
-- `agents`: Agent framework
+- `@hono/mcp`: Hono middleware for MCP integration
+- `hono`: Fast web framework for edge runtimes
 - `narou`: NPM package for interfacing with the Narou API
 - `zod`: Schema validation library
 - `wrangler`: Cloudflare Workers CLI tool
@@ -48,38 +49,37 @@ pnpm run deploy
 
 ## Architecture
 
-The project follows Cloudflare Workers' Durable Objects pattern:
+The project uses a modern Hono-based architecture for Cloudflare Workers:
 
-1. **Main Worker** (`src/index.ts`): Entry point that handles HTTP requests and delegates to Durable Objects
-2. **Durable Objects** (`MyDurableObject` class): Stateful instances that can persist data and handle complex operations
-   - Currently implements a simple `sayHello` RPC method
-   - Configured in `wrangler.jsonc` with SQLite storage
-3. **MCP Integration**: The server should implement MCP protocol handlers to expose Narou search functionality as tools
+1. **Main Worker** (`src/index.ts`): Hono application that handles HTTP routing
+   - `/mcp` endpoint: MCP protocol handler using `@hono/mcp`
+   - `/` endpoint: Health check endpoint
+   - Uses `StreamableHTTPTransport` for MCP communication
 
-## Implementation Approach for MCP Server
+2. **MCP Server Implementation** (`src/NarouMCP.ts`): 
+   - `initializeNarouMcpServer()` function that configures MCP tools
+   - Direct integration with `narou` package API
+   - Comprehensive tool set for Narou API operations
 
-When implementing the Narou MCP server:
+3. **MCP Tools Implemented**:
+   - `get_novel`: 小説取得 (単一小説の詳細情報)
+   - `search_novels`: 小説検索 (包括的な検索機能)
+   - `get_ranking`: ランキング取得 (ジャンルフィルタリング対応)
+   - `search_r18_novels`: R18小説検索
+   - `search_users`: ユーザー検索
+   - `get_ranking_history`: ランキング履歴取得
 
-1. Replace the default fetch handler with MCP server initialization using `@modelcontextprotocol/sdk`
-2. Use the `narou` package to interface with the Narou API
-3. Implement MCP tools for:
-   - Searching novels by keywords, genre, tags
-   - Fetching novel details and metadata
-   - Getting chapter information
-   - Managing bookmarks/favorites (using Durable Objects for persistence)
-4. Use Zod schemas to validate input parameters for each tool
-5. Use Durable Objects for:
-   - Caching frequently accessed data
-   - User-specific state (bookmarks, reading history)
-   - Rate limiting per user
+4. **Schema Validation** (`src/schemas.ts`): 
+   - Zod schemas for all tool input validation
+   - Type-safe parameter handling
 
 ## Cloudflare Workers Specifics
 
 - The project uses ES modules and TypeScript (ES2021 target)
 - Environment bindings are configured in `wrangler.jsonc`
-- Durable Objects are defined with migrations for schema changes (currently at v1)
 - TypeScript strict mode is enabled for type safety
-- Observability is enabled for monitoring
+- Uses Hono framework optimized for edge runtimes
+- MCP integration through HTTP streaming transport
 
 ## Code Style and Formatting
 
@@ -90,9 +90,26 @@ When implementing the Narou MCP server:
 
 ## Testing
 
-- **Test Framework**: Vitest with Cloudflare Workers pool
-- **Test Location**: Tests should be placed alongside source files with `.test.ts` extension
+- **Test Framework**: Vitest with `@cloudflare/vitest-pool-workers`
+- **Configuration**: `defineWorkersConfig` in `vitest.config.ts` with Cloudflare Workers environment
+- **Test Location**: Tests are in `tests/` directory with `.test.ts` extension
+- **Environment**: Tests use `env` from `cloudflare:test` module
+- **Testing Pattern**: Use `app.request(path, {}, env)` for Hono application testing
 - Run `pnpm run test` before committing changes
+
+### Test Writing Guidelines
+
+- Import `env` from `cloudflare:test` and pass it as the third argument to `app.request()`
+- Test basic HTTP responses rather than complex MCP protocol interactions
+- Focus on endpoint availability and basic response structure
+- Example:
+  ```typescript
+  import { env } from "cloudflare:test";
+  import app from "../src/index.js";
+  
+  const res = await app.request("/", {}, env);
+  expect(res.status).toBe(200);
+  ```
 
 ## Type Safety
 
