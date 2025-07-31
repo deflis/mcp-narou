@@ -34,6 +34,62 @@ const fetchWrapper: typeof fetch = (url) => {
 
 const narouFetch = new NarouNovelFetch(fetchWrapper);
 
+/**
+ * ランキングタイプに応じて日付を適切な値に調整する
+ * - 週間: 火曜日に調整
+ * - 月間・四半期: 1日に調整
+ * - 日間: そのまま
+ */
+function adjustDateForRanking(date: Date, rankingType: string): Date {
+  const adjustedDate = new Date(date);
+
+  switch (rankingType) {
+    case "w": {
+      // 週間
+      // 火曜日（曜日番号2）に調整
+      const dayOfWeek = adjustedDate.getDay();
+      const daysToTuesday =
+        dayOfWeek === 0
+          ? 2
+          : // 日曜日の場合
+            dayOfWeek === 1
+            ? 1
+            : // 月曜日の場合
+              dayOfWeek === 2
+              ? 0
+              : // 火曜日の場合
+                dayOfWeek <= 5
+                ? 2 - dayOfWeek + 7
+                : // 水〜金曜日の場合（前の火曜日）
+                  2 - dayOfWeek + 7; // 土曜日の場合（前の火曜日）
+
+      if (dayOfWeek !== 2) {
+        // 火曜日でない場合のみ調整
+        if (dayOfWeek === 0 || dayOfWeek === 1) {
+          // 日曜日・月曜日の場合は次の火曜日
+          adjustedDate.setDate(adjustedDate.getDate() + daysToTuesday);
+        } else {
+          // 水曜日以降の場合は前の火曜日
+          adjustedDate.setDate(adjustedDate.getDate() - (dayOfWeek - 2));
+        }
+      }
+      break;
+    }
+
+    case "m": // 月間
+    case "q": // 四半期
+      // 1日に調整
+      adjustedDate.setDate(1);
+      break;
+
+    default:
+      // 日間（"d"）やその他の場合はそのまま
+      break;
+  }
+
+  return adjustedDate;
+}
+
 export function initializeNarouMcpServer(
   server: McpServer = new McpServer({
     name: "Narou MCP Server",
@@ -296,8 +352,15 @@ export function initializeNarouMcpServer(
     async ({ date, rankingType, fields, genre, bigGenre, limit, offset }) => {
       const builder = ranking(narouFetch);
 
-      if (date) builder.date(new Date(date));
-      if (rankingType) builder.type(rankingType);
+      if (date && rankingType) {
+        const adjustedDate = adjustDateForRanking(new Date(date), rankingType);
+        builder.date(adjustedDate);
+        builder.type(rankingType);
+      } else if (date) {
+        builder.date(new Date(date));
+      } else if (rankingType) {
+        builder.type(rankingType);
+      }
 
       // ジャンルフィルタリングを行う場合は genre/biggenre フィールドを含める
       const requiredFields = fields ?? [
@@ -331,11 +394,18 @@ export function initializeNarouMcpServer(
         });
       }
 
+      const dateMessage =
+        date && rankingType
+          ? `集計日: ${date} → 調整後: ${adjustDateForRanking(new Date(date), rankingType).toISOString().split("T")[0]}`
+          : date
+            ? `集計日: ${date}`
+            : "最新ランキング";
+
       return {
         content: [
           {
             type: "text",
-            text: `${date ? `集計日: ${date}` : "最新ランキング"}${genre || bigGenre ? ` (ジャンルフィルタ適用後: ${result.length}件)` : ""}`,
+            text: `${dateMessage}${genre || bigGenre ? ` (ジャンルフィルタ適用後: ${result.length}件)` : ""}`,
           },
           ...result.slice(offset ?? 0, (offset ?? 0) + (limit ?? 300)).map(
             (item) =>
