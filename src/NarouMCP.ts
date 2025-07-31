@@ -397,7 +397,7 @@ export function initializeNarouMcpServer(
 
       const dateMessage =
         date && rankingType
-          ? `集計日: ${date} → 調整後: ${adjustDateForRanking(new Date(date), rankingType).toISOString().split("T")[0]}`
+          ? `集計日: ${adjustDateForRanking(new Date(date), rankingType).toISOString().split("T")[0]}`
           : date
             ? `集計日: ${date}`
             : "最新ランキング";
