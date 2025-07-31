@@ -1,8 +1,12 @@
 import { StreamableHTTPTransport } from "@hono/mcp";
 import { Hono } from "hono";
+import { jsxRenderer } from "hono/jsx-renderer";
+import Help from "./help";
 import { initializeNarouMcpServer } from "./NarouMCP";
 
 const app = new Hono<{ Bindings: Env }>();
+
+app.use(jsxRenderer());
 
 // MCP エンドポイント
 app.all("/mcp", async (c) => {
@@ -12,12 +16,9 @@ app.all("/mcp", async (c) => {
   return transport.handleRequest(c);
 });
 
-// ヘルスチェック用エンドポイント
+// ヘルプ表示用エンドポイント
 app.get("/", (c) => {
-  return c.json({
-    message: "Narou MCP Server is running",
-    endpoint: "/mcp",
-  });
+  return c.render(<Help />);
 });
 
 export default app;
