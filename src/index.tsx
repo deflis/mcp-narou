@@ -18,7 +18,10 @@ app.all("/mcp", async (c) => {
 
 // ヘルプ表示用エンドポイント
 app.get("/", (c) => {
-  return c.render(<Help />);
+  const origin = c.req.header("host")
+    ? `https://${c.req.header("host")}`
+    : "https://mcp-narou.your-subdomain.workers.dev";
+  return c.render(<Help origin={origin} />);
 });
 
 export default app;

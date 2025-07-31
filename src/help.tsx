@@ -1,6 +1,8 @@
 import type { FC } from "hono/jsx";
 
-const Help: FC = () => {
+const Help: FC<{ origin?: string }> = ({
+  origin = "https://mcp-narou.your-subdomain.workers.dev",
+}) => {
   return (
     <html lang="ja">
       <head>
@@ -239,8 +241,11 @@ const Help: FC = () => {
           <pre>{`{
   "mcpServers": {
     "narou": {
-      "command": "curl",
-      "args": ["-X", "POST", "https://your-worker.your-subdomain.workers.dev/mcp"]
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "${origin}/mcp"
+      ]
     }
   }
 }`}</pre>
