@@ -617,7 +617,14 @@ export function initializeNarouMcpServer(
             (history) =>
               ({
                 type: "text",
-                text: JSON.stringify(history, null, 2),
+                text: JSON.stringify(
+                  {
+                    ...history,
+                    date: history.date.toISOString().split("T")[0], // 日付のみ (YYYY-MM-DD)
+                  },
+                  null,
+                  2,
+                ),
               }) as const,
           ),
         ],
