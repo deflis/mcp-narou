@@ -1,238 +1,165 @@
-# 🤖 Chat Agent Starter Kit
+# 小説家になろう MCP サーバー
 
-![agents-header](https://github.com/user-attachments/assets/f6d99eeb-1803-4495-9c5e-3cf07a37b402)
+小説家になろう（Narou）API を Model Context Protocol (MCP) で利用するための Cloudflare Workers サーバーです。Hono フレームワークを使用して構築されており、小説検索、ランキング取得、ユーザー検索などの機能を提供します。
 
-<a href="https://deploy.workers.cloudflare.com/?url=https://github.com/cloudflare/agents-starter"><img src="https://deploy.workers.cloudflare.com/button" alt="Deploy to Cloudflare"/></a>
+## 機能
 
-A starter template for building AI-powered chat agents using Cloudflare's Agent platform, powered by [`agents`](https://www.npmjs.com/package/agents). This project provides a foundation for creating interactive chat experiences with AI, complete with a modern UI and tool integration capabilities.
+- 📚 小説検索（キーワード、ジャンル、作者などによる詳細検索）
+- 📈 ランキング取得（日間・週間・月間ランキング、ジャンルフィルタ対応）
+- 👤 ユーザー検索（作者検索機能）
+- 🔞 R18小説検索（成人向けコンテンツ）
+- 📊 ランキング履歴取得
+- ⚡️ Cloudflare Workers による高速レスポンス
+- 🔄 MCP プロトコル対応
 
-## Features
+## 前提条件
 
-- 💬 Interactive chat interface with AI
-- 🛠️ Built-in tool system with human-in-the-loop confirmation
-- 📅 Advanced task scheduling (one-time, delayed, and recurring via cron)
-- 🌓 Dark/Light theme support
-- ⚡️ Real-time streaming responses
-- 🔄 State management and chat history
-- 🎨 Modern, responsive UI
+- Cloudflare アカウント
+- Node.js (18以上推奨)
+- pnpm パッケージマネージャー
 
-## Prerequisites
+## クイックスタート
 
-- Cloudflare account
-- OpenAI API key
-
-## Quick Start
-
-1. Create a new project:
+1. リポジトリをクローン:
 
 ```bash
-npx create-cloudflare@latest --template cloudflare/agents-starter
+git clone https://github.com/deflis/mcp-narou.git
+cd mcp-narou
 ```
 
-2. Install dependencies:
+2. 依存関係をインストール:
 
 ```bash
-npm install
+pnpm install
 ```
 
-3. Set up your environment:
-
-Create a `.dev.vars` file:
-
-```env
-OPENAI_API_KEY=your_openai_api_key
-```
-
-4. Run locally:
+3. 開発サーバーを起動:
 
 ```bash
-npm start
+pnpm run start
 ```
 
-5. Deploy:
+4. デプロイ:
 
 ```bash
-npm run deploy
+pnpm run deploy
 ```
 
-## Project Structure
+## プロジェクト構造
 
 ```
 ├── src/
-│   ├── app.tsx        # Chat UI implementation
-│   ├── server.ts      # Chat agent logic
-│   ├── tools.ts       # Tool definitions
-│   ├── utils.ts       # Helper functions
-│   └── styles.css     # UI styling
+│   ├── index.ts       # Hono アプリケーションのメインエントリーポイント
+│   ├── NarouMCP.ts    # MCP ツールの定義と実装
+│   └── schemas.ts     # Zod スキーマ定義
+├── tests/
+│   ├── index.test.ts  # アプリケーションのテスト
+│   └── schema.test.ts # スキーマのテスト
+├── docs/
+│   ├── commit.md      # コミットルール
+│   ├── testing.md     # テストガイドライン
+│   └── narou.md       # Narou API リファレンス
+├── wrangler.jsonc     # Cloudflare Workers 設定
+└── vitest.config.ts   # Vitest 設定
 ```
 
-## Customization Guide
+## 提供される MCP ツール
 
-### Adding New Tools
+### `get_novel` - 小説取得
+指定されたNコードの小説詳細情報を取得します。
 
-Add new tools in `tools.ts` using the tool builder:
+**パラメータ:**
+- `ncode`: 小説のNコード（例: "n9669bk"）
+- `fields`: 取得するフィールド（オプション）
 
-```typescript
-// Example of a tool that requires confirmation
-const searchDatabase = tool({
-  description: "Search the database for user records",
-  parameters: z.object({
-    query: z.string(),
-    limit: z.number().optional(),
-  }),
-  // No execute function = requires confirmation
-});
+### `search_novels` - 小説検索
+包括的な小説検索機能を提供します。
 
-// Example of an auto-executing tool
-const getCurrentTime = tool({
-  description: "Get current server time",
-  parameters: z.object({}),
-  execute: async () => new Date().toISOString(),
-});
+**主要パラメータ:**
+- `word`: 検索キーワード
+- `genre`: ジャンル指定
+- `novelType`: 小説種別（短編/連載中/完結済み）
+- `order`: ソート順序
+- `limit`: 取得件数
 
-// Scheduling tool implementation
-const scheduleTask = tool({
-  description:
-    "schedule a task to be executed at a later time. 'when' can be a date, a delay in seconds, or a cron pattern.",
-  parameters: z.object({
-    type: z.enum(["scheduled", "delayed", "cron"]),
-    when: z.union([z.number(), z.string()]),
-    payload: z.string(),
-  }),
-  execute: async ({ type, when, payload }) => {
-    // ... see the implementation in tools.ts
-  },
-});
+### `get_ranking` - ランキング取得
+小説家になろうのランキングを取得します。
+
+**パラメータ:**
+- `rankingType`: ランキング種別（日間・週間・月間・四半期）
+- `genre`: ジャンルフィルタ
+- `date`: 対象日（オプション）
+
+### `search_r18_novels` - R18小説検索
+成人向け小説の検索機能です。
+
+### `search_users` - ユーザー検索
+小説家になろうのユーザー（作者）を検索します。
+
+### `get_ranking_history` - ランキング履歴取得
+指定した小説のランキング履歴を取得します。
+
+## 開発
+
+### 開発コマンド
+
+```bash
+# 依存関係のインストール
+pnpm install
+
+# 開発サーバーの起動
+pnpm run start
+
+# 全チェックの実行（型生成、型チェック、lint、テスト）
+pnpm run checks
+
+# 個別コマンド
+pnpm run cf-typegen      # Cloudflare バインディングの型生成
+pnpm run check-types     # TypeScript 型チェック
+pnpm run lint            # Biome lint
+pnpm run lint:fix        # lint 問題の自動修正
+pnpm run format          # コードフォーマット
+pnpm run test            # テスト実行
+pnpm run test:watch      # ウォッチモードでテスト実行
+pnpm run test:coverage   # カバレッジ付きテスト実行
+
+# デプロイ
+pnpm run deploy
 ```
 
-To handle tool confirmations, add execution functions to the `executions` object:
+### MCP クライアントでの使用
 
-```typescript
-export const executions = {
-  searchDatabase: async ({
-    query,
-    limit,
-  }: {
-    query: string;
-    limit?: number;
-  }) => {
-    // Implementation for when the tool is confirmed
-    const results = await db.search(query, limit);
-    return results;
-  },
-  // Add more execution handlers for other tools that require confirmation
-};
-```
+このサーバーは MCP プロトコルに対応しており、Claude Desktop、MCP Client などの MCP 対応クライアントから利用できます。
 
-Tools can be configured in two ways:
-
-1. With an `execute` function for automatic execution
-2. Without an `execute` function, requiring confirmation and using the `executions` object to handle the confirmed action. NOTE: The keys in `executions` should match `toolsRequiringConfirmation` in `app.tsx`.
-
-### Use a different AI model provider
-
-The starting [`server.ts`](https://github.com/cloudflare/agents-starter/blob/main/src/server.ts) implementation uses the [`ai-sdk`](https://sdk.vercel.ai/docs/introduction) and the [OpenAI provider](https://sdk.vercel.ai/providers/ai-sdk-providers/openai), but you can use any AI model provider by:
-
-1. Installing an alternative AI provider for the `ai-sdk`, such as the [`workers-ai-provider`](https://sdk.vercel.ai/providers/community-providers/cloudflare-workers-ai) or [`anthropic`](https://sdk.vercel.ai/providers/ai-sdk-providers/anthropic) provider:
-2. Replacing the AI SDK with the [OpenAI SDK](https://github.com/openai/openai-node)
-3. Using the Cloudflare [Workers AI + AI Gateway](https://developers.cloudflare.com/ai-gateway/providers/workersai/#workers-binding) binding API directly
-
-For example, to use the [`workers-ai-provider`](https://sdk.vercel.ai/providers/community-providers/cloudflare-workers-ai), install the package:
-
-```sh
-npm install workers-ai-provider
-```
-
-Add an `ai` binding to `wrangler.jsonc`:
-
-```jsonc
-// rest of file
-  "ai": {
-    "binding": "AI"
+**接続方法:**
+```json
+{
+  "mcpServers": {
+    "narou": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-fetch", "http://your-deployed-url/mcp"]
+    }
   }
-// rest of file
+}
 ```
 
-Replace the `@ai-sdk/openai` import and usage with the `workers-ai-provider`:
+## 技術スタック
 
-```diff
-// server.ts
-// Change the imports
-- import { openai } from "@ai-sdk/openai";
-+ import { createWorkersAI } from 'workers-ai-provider';
+- **Runtime**: Cloudflare Workers
+- **Framework**: Hono
+- **MCP Integration**: @hono/mcp
+- **API**: 小説家になろう API (narou package)
+- **Schema Validation**: Zod
+- **Testing**: Vitest with Cloudflare Workers pool
+- **Language**: TypeScript
 
-// Create a Workers AI instance
-+ const workersai = createWorkersAI({ binding: env.AI });
+## 参考資料
 
-// Use it when calling the streamText method (or other methods)
-// from the ai-sdk
-- const model = openai("gpt-4o-2024-11-20");
-+ const model = workersai("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b")
-```
-
-Commit your changes and then run the `agents-starter` as per the rest of this README.
-
-### Modifying the UI
-
-The chat interface is built with React and can be customized in `app.tsx`:
-
-- Modify the theme colors in `styles.css`
-- Add new UI components in the chat container
-- Customize message rendering and tool confirmation dialogs
-- Add new controls to the header
-
-### Example Use Cases
-
-1. **Customer Support Agent**
-   - Add tools for:
-     - Ticket creation/lookup
-     - Order status checking
-     - Product recommendations
-     - FAQ database search
-
-2. **Development Assistant**
-   - Integrate tools for:
-     - Code linting
-     - Git operations
-     - Documentation search
-     - Dependency checking
-
-3. **Data Analysis Assistant**
-   - Build tools for:
-     - Database querying
-     - Data visualization
-     - Statistical analysis
-     - Report generation
-
-4. **Personal Productivity Assistant**
-   - Implement tools for:
-     - Task scheduling with flexible timing options
-     - One-time, delayed, and recurring task management
-     - Task tracking with reminders
-     - Email drafting
-     - Note taking
-
-5. **Scheduling Assistant**
-   - Build tools for:
-     - One-time event scheduling using specific dates
-     - Delayed task execution (e.g., "remind me in 30 minutes")
-     - Recurring tasks using cron patterns
-     - Task payload management
-     - Flexible scheduling patterns
-
-Each use case can be implemented by:
-
-1. Adding relevant tools in `tools.ts`
-2. Customizing the UI for specific interactions
-3. Extending the agent's capabilities in `server.ts`
-4. Adding any necessary external API integrations
-
-## Learn More
-
-- [`agents`](https://github.com/cloudflare/agents/blob/main/packages/agents/README.md)
-- [Cloudflare Agents Documentation](https://developers.cloudflare.com/agents/)
+- [小説家になろう](https://syosetu.com/)
+- [Model Context Protocol](https://modelcontextprotocol.io/)
+- [Hono Documentation](https://hono.dev/)
 - [Cloudflare Workers Documentation](https://developers.cloudflare.com/workers/)
 
-## License
+## ライセンス
 
 MIT
