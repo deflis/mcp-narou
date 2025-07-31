@@ -1,4 +1,4 @@
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import {
   BigGenreNotation,
   Fields,
@@ -22,17 +22,25 @@ import {
   SearchUserInputSchema,
 } from "./schemas.js";
 
+const VERSION = "1.0.0";
+
 const fetchWrapper: typeof fetch = (url) => {
   return fetch(url, {
     headers: {
-      "User-Agent": "MCP-Narou/1.0",
+      "User-Agent": `MCP-Narou/${VERSION} https://github.com/deflis/mcp-narou`,
     },
   });
 };
 
 const narouFetch = new NarouNovelFetch(fetchWrapper);
 
-export function initializeNarouMcpServer(server: McpServer): McpServer {
+export function initializeNarouMcpServer(
+  server: McpServer = new McpServer({
+    name: "Narou MCP Server",
+    title: "小説家になろう MCP",
+    version: VERSION,
+  }),
+): McpServer {
   server.registerTool(
     "get_novel",
     {
