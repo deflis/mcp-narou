@@ -1,24 +1,29 @@
-import { NarouMCP } from "./NarouMCP.js";
+import { StreamableHTTPTransport } from "@hono/mcp";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { Hono } from "hono";
+import { initializeNarouMcpServer } from "./NarouMCP";
 
-// Durable Objects のエクスポート
-export { NarouMCP };
+const app = new Hono<{ Bindings: Env }>();
 
-export default {
-  fetch(request: Request, env: Env, ctx: ExecutionContext) {
-    const url = new URL(request.url);
+// MCP エンドポイント
+app.all("/mcp", async (c) => {
+  const server = initializeNarouMcpServer(
+    new McpServer({
+      name: "Narou MCP Server",
+      version: "1.0.0",
+    }),
+  );
+  const transport = new StreamableHTTPTransport();
+  await server.connect(transport);
+  return transport.handleRequest(c);
+});
 
-    // /sse エンドポイントの場合は SSE で応答する
-    if (url.pathname === "/sse" || url.pathname === "/sse/message") {
-      // @ts-ignore
-      return NarouMCP.serveSSE("/sse").fetch(request, env, ctx);
-    }
+// ヘルスチェック用エンドポイント
+app.get("/", (c) => {
+  return c.json({
+    message: "Narou MCP Server is running",
+    endpoint: "/mcp",
+  });
+});
 
-    // /mcp エンドポイントの場合は Streamable HTTP で応答する
-    if (url.pathname === "/mcp") {
-      // @ts-ignore
-      return NarouMCP.serve("/mcp").fetch(request, env, ctx);
-    }
-
-    return new Response("Not found", { status: 404 });
-  },
-};
+export default app;
